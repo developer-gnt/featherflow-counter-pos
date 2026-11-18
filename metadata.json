@@ -1,0 +1,8 @@
+{
+  "name": "FeatherFlow Chicken Center — Counter POS",
+  "description": "Modern responsive counter accounting POS frontend for FeatherFlow Chicken Center with live weight calculation, product catalog, Khata customer billing, and daily sales summary.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

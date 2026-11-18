@@ -1,0 +1,556 @@
+import React, { useState } from 'react';
+import {
+  ArrowLeft,
+  Download,
+  Plus,
+  Printer,
+  Wallet,
+} from 'lucide-react';
+import { CATEGORIES } from '../data/products';
+
+export default function ModuleViews({
+  activeModule,
+  onBackToPOS,
+  stats,
+  khataCustomers,
+  onRecordKhataPayment,
+  suppliers,
+  products,
+  onAdjustStock,
+  expenses,
+  onAddExpense,
+  transactions,
+}) {
+  const [expenseTitle, setExpenseTitle] = useState('');
+  const [expenseAmount, setExpenseAmount] = useState('');
+  const [expenseCategory, setExpenseCategory] = useState('Operations');
+  const [paymentDraft, setPaymentDraft] = useState({});
+  const [drawerOpeningCash, setDrawerOpeningCash] = useState(2500);
+  const [printerAutoReceipt, setPrinterAutoReceipt] = useState(true);
+  const [gstRate, setGstRate] = useState('0% (Fresh Meat Exempt)');
+
+  const handleExpenseSubmit = (e) => {
+    e.preventDefault();
+    const amt = parseFloat(expenseAmount);
+    if (!expenseTitle.trim() || Number.isNaN(amt) || amt <= 0) return;
+    onAddExpense({
+      title: expenseTitle.trim(),
+      category: expenseCategory,
+      amount: Math.round(amt),
+      mode: 'Cash',
+    });
+    setExpenseTitle('');
+    setExpenseAmount('');
+  };
+
+  const handleExportCsv = () => {
+    const header = 'Invoice,Customer,Items,Weight(kg),Amount(INR),Payment,Time\n';
+    const rows = transactions
+      .map(
+        (t) =>
+          `${t.id},"${t.customer}",${t.itemsCount},${t.weightKg.toFixed(3)},${t.amount},${t.paymentMode},${t.time}`
+      )
+      .join('\n');
+    const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'featherflow-daily-sales.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const renderTopBar = (title, subtitle) => (
+    <div className="pos-header-row">
+      <div>
+        <h1 className="pos-title">{title}</h1>
+        <p className="pos-subtitle">{subtitle}</p>
+      </div>
+      <button type="button" className="btn-primary" onClick={onBackToPOS}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <ArrowLeft size={16} />
+          Back to Counter POS
+        </span>
+      </button>
+    </div>
+  );
+
+  if (activeModule === 'dashboard') {
+    return (
+      <div className="pos-main">
+        {renderTopBar(
+          'Store Overview Dashboard',
+          'Live counter snapshot for FeatherFlow Chicken Center'
+        )}
+        <div className="module-view-card">
+          <div className="module-table-wrap">
+            <h2 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 800 }}>
+              Recent Counter Bills
+            </h2>
+            <table className="pos-table">
+              <thead>
+                <tr>
+                  <th>Bill No.</th>
+                  <th>Customer</th>
+                  <th>Weight</th>
+                  <th>Payment</th>
+                  <th>Time</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map((tx) => (
+                  <tr key={tx.id}>
+                    <td className="tabular-nums" style={{ fontWeight: 700 }}>{tx.id}</td>
+                    <td>{tx.customer}</td>
+                    <td className="tabular-nums">{tx.weightKg.toFixed(3)} kg</td>
+                    <td>{tx.paymentMode}</td>
+                    <td>{tx.time}</td>
+                    <td className="tabular-nums" style={{ fontWeight: 800, color: '#DC2026' }}>
+                      ₹{tx.amount.toLocaleString('en-IN')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeModule === 'khata') {
+    return (
+      <div className="pos-main">
+        {renderTopBar(
+          'Khata (Customer Credit Ledger)',
+          'Track regular hotel, caterer, and retail credit balances'
+        )}
+        <div className="module-view-card">
+          <div className="module-table-wrap">
+            <table className="pos-table">
+              <thead>
+                <tr>
+                  <th>Customer / Business</th>
+                  <th>Phone</th>
+                  <th>Last Order</th>
+                  <th>Balance Due</th>
+                  <th>Record Collection</th>
+                </tr>
+              </thead>
+              <tbody>
+                {khataCustomers.map((cust) => (
+                  <tr key={cust.id}>
+                    <td style={{ fontWeight: 700 }}>{cust.name}</td>
+                    <td className="tabular-nums">{cust.phone}</td>
+                    <td>{cust.lastOrder}</td>
+                    <td className="tabular-nums" style={{ fontWeight: 800, color: '#DC2026' }}>
+                      ₹{cust.balance.toLocaleString('en-IN')}
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="₹ Amount"
+                          className="text-input"
+                          style={{ width: 105, height: 32 }}
+                          value={paymentDraft[cust.id] || ''}
+                          onChange={(e) =>
+                            setPaymentDraft((prev) => ({
+                              ...prev,
+                              [cust.id]: e.target.value,
+                            }))
+                          }
+                        />
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          style={{ height: 32, padding: '0 12px', fontSize: 12 }}
+                          onClick={() => {
+                            const val = parseFloat(paymentDraft[cust.id]);
+                            if (!Number.isNaN(val) && val > 0) {
+                              onRecordKhataPayment(cust.id, val);
+                              setPaymentDraft((prev) => ({ ...prev, [cust.id]: '' }));
+                            }
+                          }}
+                        >
+                          Receive
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeModule === 'suppliers') {
+    return (
+      <div className="pos-main">
+        {renderTopBar(
+          'Poultry Suppliers & Morning Arrivals',
+          'Live bird & dressed chicken supply batches'
+        )}
+        <div className="module-view-card">
+          <div className="module-table-wrap">
+            <table className="pos-table">
+              <thead>
+                <tr>
+                  <th>Supplier</th>
+                  <th>Contact Person</th>
+                  <th>Birds</th>
+                  <th>Net Weight</th>
+                  <th>Payable</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {suppliers.map((sup) => (
+                  <tr key={sup.id}>
+                    <td style={{ fontWeight: 700 }}>{sup.name}</td>
+                    <td>{sup.contact} · {sup.phone}</td>
+                    <td className="tabular-nums">{sup.birdsDelivered}</td>
+                    <td className="tabular-nums">{sup.weightKg.toFixed(1)} kg</td>
+                    <td className="tabular-nums" style={{ fontWeight: 700 }}>
+                      ₹{sup.payable.toLocaleString('en-IN')}
+                    </td>
+                    <td>
+                      <span
+                        className={`status-tag ${
+                          sup.status === 'Pending'
+                            ? 'status-tag--amber'
+                            : 'status-tag--green'
+                        }`}
+                      >
+                        {sup.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeModule === 'stock' || activeModule === 'products') {
+    return (
+      <div className="pos-main">
+        {renderTopBar(
+          activeModule === 'stock' ? 'Live Chicken Stock' : 'Products & Daily Rates',
+          'Available cut weights and counter pricing per KG'
+        )}
+        <div className="module-view-card">
+          <div className="module-table-wrap">
+            <table className="pos-table">
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Product</th>
+                  <th>Rate / KG</th>
+                  <th>Available Stock</th>
+                  <th>Quick Refill</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((prod) => (
+                  <tr key={prod.id}>
+                    <td className="tabular-nums" style={{ fontWeight: 700 }}>{prod.sku}</td>
+                    <td style={{ fontWeight: 700 }}>
+                      {prod.name} {prod.subtitle}
+                    </td>
+                    <td className="tabular-nums" style={{ color: '#DC2026', fontWeight: 700 }}>
+                      ₹{prod.pricePerKg}/kg
+                    </td>
+                    <td className="tabular-nums">
+                      <span
+                        className={`status-tag ${
+                          prod.stockKg <= 2 ? 'status-tag--red' : 'status-tag--green'
+                        }`}
+                      >
+                        {prod.stockKg.toFixed(3)} kg
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        style={{ height: 32, padding: '0 10px', fontSize: 12 }}
+                        onClick={() => onAdjustStock(prod.id, 5)}
+                      >
+                        +5.0 kg Stock
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeModule === 'expenses') {
+    return (
+      <div className="pos-main">
+        {renderTopBar('Daily Counter Expenses', 'Record ice, bags, transport, and shop upkeep')}
+        <div className="module-view-card">
+          <form className="inline-form-row" onSubmit={handleExpenseSubmit}>
+            <input
+              type="text"
+              className="text-input"
+              placeholder="Expense description (e.g. Ice blocks)"
+              value={expenseTitle}
+              onChange={(e) => setExpenseTitle(e.target.value)}
+              style={{ flex: 2, minWidth: 180 }}
+            />
+            <select
+              className="text-input"
+              value={expenseCategory}
+              onChange={(e) => setExpenseCategory(e.target.value)}
+            >
+              <option value="Operations">Operations</option>
+              <option value="Packaging">Packaging</option>
+              <option value="Transport">Transport</option>
+              <option value="Staff">Staff</option>
+            </select>
+            <input
+              type="number"
+              className="text-input"
+              placeholder="₹ Amount"
+              value={expenseAmount}
+              onChange={(e) => setExpenseAmount(e.target.value)}
+              style={{ width: 120 }}
+            />
+            <button type="submit" className="btn-primary">
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <Plus size={15} />
+                Add Expense
+              </span>
+            </button>
+          </form>
+
+          <div className="module-table-wrap">
+            <table className="pos-table">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th>Category</th>
+                  <th>Mode</th>
+                  <th>Time</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {expenses.map((exp) => (
+                  <tr key={exp.id}>
+                    <td style={{ fontWeight: 700 }}>{exp.title}</td>
+                    <td>{exp.category}</td>
+                    <td>{exp.mode}</td>
+                    <td>{exp.time}</td>
+                    <td className="tabular-nums" style={{ fontWeight: 800, color: '#DC2026' }}>
+                      ₹{exp.amount.toLocaleString('en-IN')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeModule === 'cashdrawer') {
+    const cashSales = transactions
+      .filter((t) => t.paymentMode === 'Cash')
+      .reduce((sum, t) => sum + t.amount, 0);
+    const expectedCash = drawerOpeningCash + cashSales - stats.expensesAmount;
+
+    return (
+      <div className="pos-main">
+        {renderTopBar('Cash Drawer Register', 'Opening float, cash sales, and net counter cash')}
+        <div className="module-view-card">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+              gap: 12,
+            }}
+          >
+            <div className="summary-card summary-card--purchase">
+              <div className="summary-icon"><Wallet size={18} /></div>
+              <div className="summary-text">
+                <span className="summary-label">Opening Cash Float</span>
+                <span className="summary-value">₹{drawerOpeningCash.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+            <div className="summary-card summary-card--sales">
+              <div className="summary-icon"><Wallet size={18} /></div>
+              <div className="summary-text">
+                <span className="summary-label">Cash Sales Collected</span>
+                <span className="summary-value">₹{cashSales.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+            <div className="summary-card summary-card--stock">
+              <div className="summary-icon"><Wallet size={18} /></div>
+              <div className="summary-text">
+                <span className="summary-label">Expected Drawer Balance</span>
+                <span className="summary-value">₹{expectedCash.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="inline-form-row" style={{ alignItems: 'center' }}>
+            <label htmlFor="opening-float" style={{ fontSize: 13, fontWeight: 700 }}>
+              Update Opening Float (₹):
+            </label>
+            <input
+              id="opening-float"
+              type="number"
+              className="text-input"
+              value={drawerOpeningCash}
+              onChange={(e) => setDrawerOpeningCash(Number(e.target.value) || 0)}
+              style={{ width: 140 }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeModule === 'reports') {
+    return (
+      <div className="pos-main">
+        {renderTopBar('Daily Sales Reports', 'Export counter billing logs and shift summaries')}
+        <div className="module-view-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>
+              Total Day Sales: <span style={{ color: '#DC2026' }}>₹{stats.todaySales.toLocaleString('en-IN')}</span> · Bills Recorded: {transactions.length}
+            </div>
+            <button type="button" className="btn-primary" onClick={handleExportCsv}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Download size={15} />
+                Download CSV Report
+              </span>
+            </button>
+          </div>
+
+          <div className="module-table-wrap">
+            <table className="pos-table">
+              <thead>
+                <tr>
+                  <th>Invoice</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th>Weight</th>
+                  <th>Payment</th>
+                  <th>Time</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map((tx) => (
+                  <tr key={tx.id}>
+                    <td className="tabular-nums" style={{ fontWeight: 700 }}>{tx.id}</td>
+                    <td>{tx.customer}</td>
+                    <td className="tabular-nums">{tx.itemsCount}</td>
+                    <td className="tabular-nums">{tx.weightKg.toFixed(3)} kg</td>
+                    <td>{tx.paymentMode}</td>
+                    <td>{tx.time}</td>
+                    <td className="tabular-nums" style={{ fontWeight: 800, color: '#DC2026' }}>
+                      ₹{tx.amount.toLocaleString('en-IN')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeModule === 'categories') {
+    return (
+      <div className="pos-main">
+        {renderTopBar('Product Categories', 'Manage poultry cut groups displayed on the POS grid')}
+        <div className="module-view-card">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {CATEGORIES.map((cat) => (
+              <div
+                key={cat.id}
+                style={{
+                  border: '1px solid #E5E8ED',
+                  borderRadius: 12,
+                  padding: 14,
+                  background: '#FAFAFB',
+                }}
+              >
+                <div style={{ fontWeight: 800, fontSize: 14 }}>{cat.label}</div>
+                <div style={{ fontSize: 12, color: '#727988', marginTop: 4 }}>
+                  {cat.id === 'all'
+                    ? `${products.length} total cuts`
+                    : `${products.filter((p) => p.category === cat.id || (p.secondaryCategories || []).includes(cat.id)).length} items`}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pos-main">
+      {renderTopBar('Counter POS Settings', 'Scale calibration, thermal printer, and shop configuration')}
+      <div className="module-view-card">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 460 }}>
+          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, fontSize: 14, fontWeight: 600 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <Printer size={17} color="#DC2026" />
+              Auto-print thermal bill after sale
+            </span>
+            <input
+              type="checkbox"
+              checked={printerAutoReceipt}
+              onChange={(e) => setPrinterAutoReceipt(e.target.checked)}
+              style={{ width: 18, height: 18, accentColor: '#DC2026' }}
+            />
+          </label>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <label htmlFor="gst-select" style={{ fontSize: 13, fontWeight: 700 }}>
+              Tax / GST Classification
+            </label>
+            <select
+              id="gst-select"
+              className="text-input"
+              value={gstRate}
+              onChange={(e) => setGstRate(e.target.value)}
+            >
+              <option value="0% (Fresh Meat Exempt)">0% (Fresh Meat Exempt)</option>
+              <option value="5% GST (Processed Cuts)">5% GST (Processed Cuts)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
