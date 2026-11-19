@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { CheckCircle2, Lock, X } from 'lucide-react';
+import { CheckCircle2, Lock, UserPlus, X } from 'lucide-react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import POSHeader from './components/POSHeader';
@@ -62,6 +62,13 @@ export default function App() {
 
   const [cartMessage, setCartMessage] = useState(null);
   const [showSaleConfirm, setShowSaleConfirm] = useState(false);
+
+  // Khata Add Customer State
+  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState('');
+  const [newCustomerPhone, setNewCustomerPhone] = useState('');
+  const [newCustomerBalance, setNewCustomerBalance] = useState('');
+  const [addCustomerError, setAddCustomerError] = useState('');
 
   const selectedProduct = useMemo(
     () => products.find((p) => p.id === selectedProductId) || products[0],
@@ -247,6 +254,34 @@ export default function App() {
     );
   };
 
+  const handleCreateCustomerSubmit = (e) => {
+    e.preventDefault();
+    if (!newCustomerName.trim()) {
+      setAddCustomerError('Customer or business name is required.');
+      return;
+    }
+    const initialBal = parseFloat(newCustomerBalance);
+    const validBal = Number.isNaN(initialBal) ? 0 : Math.round(initialBal);
+    const newCust = {
+      id: `kh-${Date.now()}`,
+      name: newCustomerName.trim(),
+      phone: newCustomerPhone.trim() || '—',
+      balance: validBal,
+      lastOrder: 'Just added',
+    };
+    setKhataCustomers((prev) => [newCust, ...prev]);
+    setSelectedKhataId(newCust.id);
+    setShowAddCustomerModal(false);
+    setNewCustomerName('');
+    setNewCustomerPhone('');
+    setNewCustomerBalance('');
+    setAddCustomerError('');
+    setCartMessage({
+      type: 'success',
+      text: `Customer "${newCust.name}" added to Khata successfully.`,
+    });
+  };
+
   const handleAdjustStock = (productId, addKg) => {
     setProducts((prev) =>
       prev.map((p) =>
@@ -307,6 +342,7 @@ export default function App() {
                 selectedKhataId={selectedKhataId}
                 onSelectKhataId={setSelectedKhataId}
                 onQuickScanSku={handleQuickScanSku}
+                onOpenAddCustomer={() => setShowAddCustomerModal(true)}
               />
 
               <WeightPanel
@@ -388,6 +424,7 @@ export default function App() {
             expenses={expenses}
             onAddExpense={handleAddExpense}
             transactions={transactions}
+            onOpenAddCustomer={() => setShowAddCustomerModal(true)}
           />
         )}
       </div>
@@ -475,6 +512,123 @@ export default function App() {
                 Confirm &amp; Clear Cart
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showAddCustomerModal && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-customer-modal-title"
+        >
+          <div className="modal-card" style={{ maxWidth: 440 }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <UserPlus size={20} color="#DC2026" />
+                <h3 id="add-customer-modal-title" className="modal-title">
+                  Add New Khata Customer
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => {
+                  setShowAddCustomerModal(false);
+                  setNewCustomerName('');
+                  setNewCustomerPhone('');
+                  setNewCustomerBalance('');
+                  setAddCustomerError('');
+                }}
+                aria-label="Close dialog"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleCreateCustomerSubmit}
+              style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}
+            >
+              {addCustomerError && (
+                <div className="cart-alert" style={{ margin: 0 }}>
+                  {addCustomerError}
+                </div>
+              )}
+
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                  Customer / Business Name <span style={{ color: '#DC2026' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  className="text-input"
+                  style={{ width: '100%' }}
+                  placeholder="e.g. Al-Madina Biryani or Imran Khan"
+                  value={newCustomerName}
+                  onChange={(e) => setNewCustomerName(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  className="text-input"
+                  style={{ width: '100%' }}
+                  placeholder="e.g. +91 98204 11230"
+                  value={newCustomerPhone}
+                  onChange={(e) => setNewCustomerPhone(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                  Opening Balance Due (₹)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  className="text-input"
+                  style={{ width: '100%' }}
+                  placeholder="0"
+                  value={newCustomerBalance}
+                  onChange={(e) => setNewCustomerBalance(e.target.value)}
+                />
+                <span style={{ fontSize: 11.5, color: '#727988', marginTop: 4, display: 'block' }}>
+                  Initial outstanding credit balance for this customer.
+                </span>
+              </div>
+
+              <div className="modal-actions" style={{ marginTop: 8 }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => {
+                    setShowAddCustomerModal(false);
+                    setNewCustomerName('');
+                    setNewCustomerPhone('');
+                    setNewCustomerBalance('');
+                    setAddCustomerError('');
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <UserPlus size={16} />
+                  <span>Save Customer</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScanLine, ShoppingCart, User, Wallet } from 'lucide-react';
+import { ScanLine, ShoppingCart, User, UserPlus, Wallet } from 'lucide-react';
 
 export default function POSHeader({
   customerType,
@@ -8,6 +8,7 @@ export default function POSHeader({
   selectedKhataId,
   onSelectKhataId,
   onQuickScanSku,
+  onOpenAddCustomer,
 }) {
   const [showScanner, setShowScanner] = useState(false);
   const [skuInput, setSkuInput] = useState('');
@@ -78,21 +79,44 @@ export default function POSHeader({
 
       {customerType === 'khata' && (
         <div className="khata-customer-bar">
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#DC2026' }}>
-            Khata Account:
-          </span>
-          <select
-            className="khata-customer-select"
-            value={selectedKhataId}
-            onChange={(e) => onSelectKhataId(e.target.value)}
-            aria-label="Select Khata customer"
-          >
-            {khataCustomers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} (Balance: ₹{c.balance.toLocaleString('en-IN')})
-              </option>
-            ))}
-          </select>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#DC2026', whiteSpace: 'nowrap' }}>
+              Khata Account:
+            </span>
+            <select
+              className="khata-customer-select"
+              value={selectedKhataId}
+              onChange={(e) => onSelectKhataId(e.target.value)}
+              aria-label="Select Khata customer"
+            >
+              {khataCustomers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} (Balance: ₹{c.balance.toLocaleString('en-IN')})
+                </option>
+              ))}
+            </select>
+          </div>
+          {onOpenAddCustomer && (
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{
+                height: 38,
+                padding: '0 12px',
+                fontSize: 12.5,
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                whiteSpace: 'nowrap',
+                cursor: 'pointer',
+              }}
+              onClick={onOpenAddCustomer}
+            >
+              <UserPlus size={15} color="#DC2026" />
+              <span>Add New Customer</span>
+            </button>
+          )}
         </div>
       )}
 

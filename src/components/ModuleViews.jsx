@@ -4,6 +4,7 @@ import {
   Download,
   Plus,
   Printer,
+  UserPlus,
   Wallet,
 } from 'lucide-react';
 import { CATEGORIES } from '../data/products';
@@ -20,6 +21,7 @@ export default function ModuleViews({
   expenses,
   onAddExpense,
   transactions,
+  onOpenAddCustomer,
 }) {
   const [expenseTitle, setExpenseTitle] = useState('');
   const [expenseAmount, setExpenseAmount] = useState('');
@@ -62,18 +64,25 @@ export default function ModuleViews({
     URL.revokeObjectURL(url);
   };
 
-  const renderTopBar = (title, subtitle) => (
+  const renderTopBar = (title, subtitle, extraAction = null) => (
     <div className="pos-header-row">
       <div>
         <h1 className="pos-title">{title}</h1>
         <p className="pos-subtitle">{subtitle}</p>
       </div>
-      <button type="button" className="btn-primary" onClick={onBackToPOS}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <ArrowLeft size={16} />
-          Back to Counter POS
-        </span>
-      </button>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        {extraAction}
+        <button
+          type="button"
+          className={extraAction ? 'btn-secondary' : 'btn-primary'}
+          onClick={onBackToPOS}
+        >
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <ArrowLeft size={16} />
+            Back to Counter POS
+          </span>
+        </button>
+      </div>
     </div>
   );
 
@@ -126,7 +135,16 @@ export default function ModuleViews({
       <div className="pos-main">
         {renderTopBar(
           'Khata (Customer Credit Ledger)',
-          'Track regular hotel, caterer, and retail credit balances'
+          'Track regular hotel, caterer, and retail credit balances',
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={onOpenAddCustomer}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <UserPlus size={16} />
+            <span>Add New Customer</span>
+          </button>
         )}
         <div className="module-view-card">
           <div className="module-table-wrap">
