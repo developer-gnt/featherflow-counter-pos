@@ -34,10 +34,6 @@ export default function ModuleViews({
   onOpenAddCategory,
   onOpenAddSupplier,
 }) {
-  const [expenseTitle, setExpenseTitle] = useState('');
-  const [expenseAmount, setExpenseAmount] = useState('');
-  const [expenseCategory, setExpenseCategory] = useState('Operations');
-  const [inlineExpenseError, setInlineExpenseError] = useState('');
   const [expenseSuccessToast, setExpenseSuccessToast] = useState('');
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [expenseModalTitle, setExpenseModalTitle] = useState('');
@@ -133,32 +129,6 @@ export default function ModuleViews({
       });
     }
     setEditingSupplier(null);
-  };
-
-  const handleExpenseSubmit = (e) => {
-    e.preventDefault();
-    if (!expenseTitle.trim()) {
-      setInlineExpenseError('Please enter an expense description.');
-      return;
-    }
-    const amt = parseFloat(expenseAmount);
-    if (Number.isNaN(amt) || amt <= 0) {
-      setInlineExpenseError('Please enter a valid amount greater than ₹0.');
-      return;
-    }
-    setInlineExpenseError('');
-    if (onAddExpense) {
-      onAddExpense({
-        title: expenseTitle.trim(),
-        category: expenseCategory,
-        amount: Math.round(amt),
-        mode: 'Cash',
-      });
-    }
-    setExpenseSuccessToast(`Expense "${expenseTitle.trim()}" (₹${Math.round(amt).toLocaleString('en-IN')}) recorded successfully.`);
-    setTimeout(() => setExpenseSuccessToast(''), 3000);
-    setExpenseTitle('');
-    setExpenseAmount('');
   };
 
   const handleModalExpenseSubmit = (e) => {
@@ -846,58 +816,6 @@ export default function ModuleViews({
               {expenseSuccessToast}
             </div>
           )}
-          {inlineExpenseError && (
-            <div className="cart-alert" style={{ margin: '0 0 12px' }} role="alert">
-              {inlineExpenseError}
-            </div>
-          )}
-
-          <form className="inline-form-row" onSubmit={handleExpenseSubmit}>
-            <input
-              type="text"
-              className="text-input"
-              placeholder="Expense description (e.g. Ice blocks)"
-              value={expenseTitle}
-              onChange={(e) => {
-                setExpenseTitle(e.target.value);
-                if (inlineExpenseError) setInlineExpenseError('');
-              }}
-              style={{ flex: 2, minWidth: 180 }}
-              required
-            />
-            <select
-              className="text-input"
-              value={expenseCategory}
-              onChange={(e) => setExpenseCategory(e.target.value)}
-            >
-              <option value="Operations">Operations</option>
-              <option value="Packaging">Packaging</option>
-              <option value="Transport">Transport</option>
-              <option value="Staff">Staff</option>
-              <option value="Maintenance">Maintenance</option>
-              <option value="Utilities">Utilities</option>
-            </select>
-            <input
-              type="number"
-              min="1"
-              step="1"
-              className="text-input"
-              placeholder="₹ Amount"
-              value={expenseAmount}
-              onChange={(e) => {
-                setExpenseAmount(e.target.value);
-                if (inlineExpenseError) setInlineExpenseError('');
-              }}
-              style={{ width: 120 }}
-              required
-            />
-            <button type="submit" className="btn-primary">
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                <Plus size={15} />
-                Add Expense
-              </span>
-            </button>
-          </form>
 
           <div className="module-table-wrap">
             <table className="pos-table">
