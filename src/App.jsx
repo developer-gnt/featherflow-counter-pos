@@ -133,8 +133,14 @@ export default function App() {
     setScaleWeightKg((prev) => Math.round(((Number(prev) || 0) + presetKg) * 1000) / 1000);
   };
 
-  const handleResetWeight = () => {
+  const resetScaleSection = () => {
     setScaleWeightKg(0);
+    setSelectedProductId(PRODUCTS[0].id);
+    setRatePerKg(PRODUCTS[0].pricePerKg);
+  };
+
+  const handleResetWeight = () => {
+    resetScaleSection();
   };
 
   const handleAddWeighedToCart = () => {
@@ -171,6 +177,7 @@ export default function App() {
       });
       return;
     }
+    resetScaleSection();
     setCartMessage(null);
     setShowSaleConfirm(true);
   };
@@ -227,6 +234,7 @@ export default function App() {
     );
 
     clearCart();
+    resetScaleSection();
     setShowSaleConfirm(false);
     setCartMessage({
       type: 'success',
@@ -359,6 +367,7 @@ export default function App() {
               onRemoveItem={removeItem}
               onClearCart={() => {
                 clearCart();
+                resetScaleSection();
                 setCartMessage(null);
               }}
               onCompleteSaleClick={handleCompleteSaleClick}
