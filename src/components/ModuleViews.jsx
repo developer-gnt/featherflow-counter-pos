@@ -10,10 +10,12 @@ import {
   X,
 } from 'lucide-react';
 import { CATEGORIES } from '../data/products';
+import BusinessDashboard from './dashboard/BusinessDashboard';
 
 export default function ModuleViews({
   activeModule,
   onBackToPOS,
+  onSelectModule,
   stats,
   khataCustomers,
   onRecordKhataPayment,
@@ -140,43 +142,14 @@ export default function ModuleViews({
   if (activeModule === 'dashboard') {
     return (
       <div className="pos-main">
-        {renderTopBar(
-          'Store Overview Dashboard',
-          'Live counter snapshot for FeatherFlow Chicken Center'
-        )}
-        <div className="module-view-card">
-          <div className="module-table-wrap">
-            <h2 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 800 }}>
-              Recent Counter Bills
-            </h2>
-            <table className="pos-table">
-              <thead>
-                <tr>
-                  <th>Bill No.</th>
-                  <th>Customer</th>
-                  <th>Weight</th>
-                  <th>Payment</th>
-                  <th>Time</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((tx) => (
-                  <tr key={tx.id}>
-                    <td className="tabular-nums" style={{ fontWeight: 700 }}>{tx.id}</td>
-                    <td>{tx.customer}</td>
-                    <td className="tabular-nums">{tx.weightKg.toFixed(3)} kg</td>
-                    <td>{tx.paymentMode}</td>
-                    <td>{tx.time}</td>
-                    <td className="tabular-nums" style={{ fontWeight: 800, color: '#DC2026' }}>
-                      ₹{tx.amount.toLocaleString('en-IN')}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <BusinessDashboard
+          stats={stats}
+          transactions={transactions}
+          products={products}
+          onUpdateProduct={onUpdateProduct}
+          onAdjustStock={onAdjustStock}
+          onNavigate={onSelectModule || onBackToPOS}
+        />
       </div>
     );
   }

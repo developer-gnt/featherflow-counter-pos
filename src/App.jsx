@@ -523,6 +523,7 @@ export default function App() {
           <ModuleViews
             activeModule={activeModule}
             onBackToPOS={() => setActiveModule('pos')}
+            onSelectModule={setActiveModule}
             stats={{
               todaySales,
               liveStockKg,

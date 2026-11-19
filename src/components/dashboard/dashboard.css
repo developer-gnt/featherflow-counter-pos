@@ -1,0 +1,632 @@
+/* ==========================================================================
+   FEATHERFLOW BUSINESS DASHBOARD STYLES
+   ========================================================================== */
+
+.dashboard-content-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+/* Header Section */
+.dash-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 4px 2px;
+}
+
+.dash-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dash-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #FFF1F2;
+  color: #DC2026;
+  flex-shrink: 0;
+}
+
+.dash-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #102A56;
+  letter-spacing: -0.02em;
+}
+
+.dash-subtitle {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.dash-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dash-date-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  background: #FFFFFF;
+  border: 1px solid #E5EAF2;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #102A56;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(16, 42, 86, 0.04);
+  transition: all 0.15s ease;
+}
+
+.dash-date-btn:hover {
+  border-color: #DC2026;
+  color: #DC2026;
+}
+
+.dash-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: #FFFFFF;
+  border: 1px solid #E5EAF2;
+  border-radius: 10px;
+  color: #102A56;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(16, 42, 86, 0.04);
+  transition: all 0.2s ease;
+}
+
+.dash-refresh-btn:hover {
+  border-color: #DC2026;
+  color: #DC2026;
+  transform: rotate(45deg);
+}
+
+.dash-refresh-btn.is-spinning {
+  animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* KPI Cards Grid */
+.dash-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.dash-kpi-card {
+  background: #FFFFFF;
+  border: 1px solid #E5EAF2;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(16, 42, 86, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dash-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(16, 42, 86, 0.08);
+}
+
+.dash-kpi-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dash-kpi-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dash-kpi-icon-box--red {
+  background: #FFF1F2;
+  color: #DC2026;
+}
+
+.dash-kpi-icon-box--green {
+  background: #ECFDF5;
+  color: #16A34A;
+}
+
+.dash-kpi-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dash-kpi-label {
+  font-size: 12.5px;
+  color: #64748B;
+  font-weight: 600;
+}
+
+.dash-kpi-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #102A56;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.dash-kpi-growth {
+  font-size: 11px;
+  font-weight: 700;
+  color: #16A34A;
+  margin-top: 1px;
+}
+
+.dash-kpi-sparkline {
+  flex-shrink: 0;
+  width: 68px;
+  height: 32px;
+}
+
+/* Base Card Style */
+.dash-card {
+  background: #FFFFFF;
+  border: 1px solid #E5EAF2;
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 8px rgba(16, 42, 86, 0.04);
+}
+
+.dash-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #F1F4F9;
+}
+
+.dash-card-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-card-icon {
+  color: #DC2026;
+  display: flex;
+  align-items: center;
+}
+
+.dash-card-title {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #102A56;
+}
+
+.dash-link-action {
+  background: transparent;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #DC2026;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.dash-link-action:hover {
+  background: #FFF1F2;
+}
+
+/* Top Products Section */
+.top-products-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.top-product-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 0;
+  border-bottom: 1px solid #F1F4F9;
+  gap: 14px;
+}
+
+.top-product-row:last-child {
+  border-bottom: none;
+  padding-bottom: 4px;
+}
+
+.top-product-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.top-product-rank {
+  font-size: 15px;
+  font-weight: 800;
+  color: #102A56;
+  width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.top-product-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid #E5EAF2;
+  flex-shrink: 0;
+  background: #F8FAFC;
+}
+
+.top-product-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.top-product-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #102A56;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-product-qty {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748B;
+}
+
+.top-product-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.top-product-price {
+  font-size: 15px;
+  font-weight: 800;
+  color: #DC2026;
+  white-space: nowrap;
+}
+
+.change-price-btn {
+  background: #DC2026;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 15px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.change-price-btn:hover {
+  background: #B9141B;
+  transform: translateY(-1px);
+}
+
+/* Analytics Row (3 Columns) */
+.dash-analytics-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+/* Period Filter Pills */
+.dash-period-pills {
+  display: flex;
+  align-items: center;
+  background: #F1F5F9;
+  border-radius: 18px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.dash-pill-btn {
+  border: none;
+  background: transparent;
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dash-pill-btn.is-active {
+  background: #DC2026;
+  color: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(220, 32, 38, 0.3);
+}
+
+/* Bar Chart Container */
+.sales-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 195px;
+  padding-top: 6px;
+}
+
+.chart-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.chart-bar-rect {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+
+.chart-bar-rect:hover {
+  opacity: 0.85;
+}
+
+/* Stock Status Card */
+.dash-stock-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-outline-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #DC2026;
+  background: #FFFFFF;
+  color: #DC2026;
+  border-radius: 16px;
+  padding: 3px 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dash-outline-pill-btn:hover {
+  background: #FFF1F2;
+}
+
+.stock-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.stock-status-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stock-status-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #E5EAF2;
+  flex-shrink: 0;
+}
+
+.stock-status-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #102A56;
+  width: 58px;
+  flex-shrink: 0;
+}
+
+.stock-progress-track {
+  flex: 1;
+  height: 8px;
+  background: #F1F5F9;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.stock-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.stock-status-val {
+  font-size: 13px;
+  font-weight: 800;
+  color: #102A56;
+  width: 52px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Recent Activities Timeline */
+.recent-activities-list {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-left: 10px;
+  margin-top: 4px;
+}
+
+.timeline-track-line {
+  position: absolute;
+  top: 10px;
+  bottom: 22px;
+  left: 64px;
+  width: 2px;
+  background: #FECACA;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  padding: 9px 0;
+  gap: 14px;
+}
+
+.timeline-time {
+  width: 54px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748B;
+  flex-shrink: 0;
+  text-align: right;
+  padding-top: 1px;
+}
+
+.timeline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #DC2026;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 0 2px #DC2026;
+  margin-top: 4px;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.timeline-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.timeline-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #102A56;
+}
+
+.timeline-desc {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #64748B;
+}
+
+/* Recent Counter Bills Table Card */
+.bills-table-wrap {
+  overflow-x: auto;
+  margin-top: 4px;
+}
+
+.bills-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.bills-table th {
+  padding: 10px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #64748B;
+  border-bottom: 1px solid #E5EAF2;
+  white-space: nowrap;
+}
+
+.bills-table td {
+  padding: 12px 14px;
+  font-size: 13.5px;
+  color: #102A56;
+  border-bottom: 1px solid #F1F4F9;
+  white-space: nowrap;
+}
+
+.bills-table tr:last-child td {
+  border-bottom: none;
+}
+
+.bill-id-cell {
+  font-weight: 700;
+  color: #102A56;
+}
+
+.bill-amount-cell {
+  font-weight: 800;
+  color: #DC2026;
+  text-align: right;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1200px) {
+  .dash-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dash-analytics-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dash-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .top-product-row {
+    flex-wrap: wrap;
+  }
+
+  .top-product-right {
+    width: 100%;
+    justify-content: space-between;
+    padding-left: 36px;
+  }
+}
