@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import {
   ArrowLeft,
   Download,
+  Pencil,
   Plus,
   Printer,
   UserPlus,
   Wallet,
+  X,
 } from 'lucide-react';
 import { CATEGORIES } from '../data/products';
 
@@ -18,6 +20,7 @@ export default function ModuleViews({
   suppliers,
   products,
   onAdjustStock,
+  onUpdateProduct,
   expenses,
   onAddExpense,
   transactions,
@@ -30,6 +33,52 @@ export default function ModuleViews({
   const [drawerOpeningCash, setDrawerOpeningCash] = useState(2500);
   const [printerAutoReceipt, setPrinterAutoReceipt] = useState(true);
   const [gstRate, setGstRate] = useState('0% (Fresh Meat Exempt)');
+
+  // Product Edit State
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editSubtitle, setEditSubtitle] = useState('');
+  const [editRate, setEditRate] = useState('');
+  const [editStock, setEditStock] = useState('');
+  const [editError, setEditError] = useState('');
+
+  const handleStartEdit = (prod) => {
+    setEditingProduct(prod);
+    setEditName(prod.name);
+    setEditSubtitle(prod.subtitle || '');
+    setEditRate(String(prod.pricePerKg));
+    setEditStock(String(prod.stockKg));
+    setEditError('');
+  };
+
+  const handleSaveEdit = (e) => {
+    e.preventDefault();
+    if (!editName.trim()) {
+      setEditError('Product name cannot be empty.');
+      return;
+    }
+    const rateNum = parseFloat(editRate);
+    if (Number.isNaN(rateNum) || rateNum <= 0) {
+      setEditError('Please enter a valid rate per KG greater than 0.');
+      return;
+    }
+    const stockNum = parseFloat(editStock);
+    if (Number.isNaN(stockNum) || stockNum < 0) {
+      setEditError('Please enter a valid stock weight (0 or higher).');
+      return;
+    }
+
+    if (onUpdateProduct && editingProduct) {
+      onUpdateProduct({
+        ...editingProduct,
+        name: editName.trim(),
+        subtitle: editSubtitle.trim(),
+        pricePerKg: Math.round(rateNum),
+        stockKg: Math.round(stockNum * 1000) / 1000,
+      });
+    }
+    setEditingProduct(null);
+  };
 
   const handleExpenseSubmit = (e) => {
     e.preventDefault();
@@ -277,6 +326,7 @@ export default function ModuleViews({
                   <th>Rate / KG</th>
                   <th>Available Stock</th>
                   <th>Quick Refill</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -308,12 +358,168 @@ export default function ModuleViews({
                         +5.0 kg Stock
                       </button>
                     </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        style={{
+                          height: 32,
+                          padding: '0 12px',
+                          fontSize: 12,
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => handleStartEdit(prod)}
+                        title={`Edit ${prod.name}`}
+                      >
+                        <Pencil size={13} color="#DC2026" />
+                        <span>Edit</span>
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
+
+        {editingProduct && (
+          <div
+            className="modal-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-product-title"
+          >
+            <div className="modal-card" style={{ maxWidth: 440 }}>
+              <div className="modal-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Pencil size={20} color="#DC2026" />
+                  <h3 id="edit-product-title" className="modal-title">
+                    Edit Product &amp; Stock
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  className="modal-close-btn"
+                  onClick={() => setEditingProduct(null)}
+                  aria-label="Close dialog"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form
+                onSubmit={handleSaveEdit}
+                style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}
+              >
+                {editError && (
+                  <div className="cart-alert" style={{ margin: 0 }}>
+                    {editError}
+                  </div>
+                )}
+
+                <div
+                  style={{
+                    background: 'var(--color-bg)',
+                    padding: '9px 12px',
+                    borderRadius: 8,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: '#4B5563' }}>SKU Code</span>
+                  <span className="tabular-nums" style={{ fontWeight: 800, color: '#DC2026' }}>
+                    {editingProduct.sku}
+                  </span>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Product Name <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="text-input"
+                    style={{ width: '100%' }}
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Cut Type / Subtitle
+                  </label>
+                  <input
+                    type="text"
+                    className="text-input"
+                    style={{ width: '100%' }}
+                    placeholder="e.g. (Curry Cut) or (Skinless)"
+                    value={editSubtitle}
+                    onChange={(e) => setEditSubtitle(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                      Rate / KG (₹) <span style={{ color: '#DC2026' }}>*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      className="text-input"
+                      style={{ width: '100%' }}
+                      value={editRate}
+                      onChange={(e) => setEditRate(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                      Available Stock (kg) <span style={{ color: '#DC2026' }}>*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.05"
+                      className="text-input"
+                      style={{ width: '100%' }}
+                      value={editStock}
+                      onChange={(e) => setEditStock(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="modal-actions" style={{ marginTop: 8 }}>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setEditingProduct(null)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  >
+                    <Pencil size={15} />
+                    <span>Save Changes</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

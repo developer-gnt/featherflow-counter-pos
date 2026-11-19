@@ -228,9 +228,9 @@ export default function App() {
           .reduce((s, item) => s + item.weightKg, 0);
         return soldQty > 0
           ? {
-              ...prod,
-              stockKg: Math.max(0, Math.round((prod.stockKg - soldQty) * 1000) / 1000),
-            }
+            ...prod,
+            stockKg: Math.max(0, Math.round((prod.stockKg - soldQty) * 1000) / 1000),
+          }
           : prod;
       })
     );
@@ -297,6 +297,24 @@ export default function App() {
       )
     );
     setLiveStockKg((prev) => Math.round((prev + addKg) * 1000) / 1000);
+  };
+
+  const handleUpdateProduct = (updatedProduct) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === updatedProduct.id ? { ...p, ...updatedProduct } : p))
+    );
+    if (selectedProductId === updatedProduct.id && updatedProduct.pricePerKg !== undefined) {
+      setRatePerKg(updatedProduct.pricePerKg);
+    }
+    setLiveStockKg((prev) => {
+      const oldProd = products.find((p) => p.id === updatedProduct.id);
+      const diff = (updatedProduct.stockKg ?? oldProd?.stockKg ?? 0) - (oldProd?.stockKg ?? 0);
+      return Math.max(0, Math.round((prev + diff) * 1000) / 1000);
+    });
+    setCartMessage({
+      type: 'success',
+      text: `Updated "${updatedProduct.name}" rates and stock successfully.`,
+    });
   };
 
   const handleAddExpense = (newExp) => {
@@ -427,6 +445,7 @@ export default function App() {
             suppliers={suppliers}
             products={products}
             onAdjustStock={handleAdjustStock}
+            onUpdateProduct={handleUpdateProduct}
             expenses={expenses}
             onAddExpense={handleAddExpense}
             transactions={transactions}
@@ -591,8 +610,8 @@ export default function App() {
                         newCustomerPhone.length === 10
                           ? '#16A34A'
                           : newCustomerPhone.length > 0
-                          ? '#DC2026'
-                          : '#727988',
+                            ? '#DC2026'
+                            : '#727988',
                     }}
                   >
                     {newCustomerPhone.length}/10 digits
