@@ -72,10 +72,13 @@ export default function App() {
   const [newCustomerBalance, setNewCustomerBalance] = useState('');
   const [addCustomerError, setAddCustomerError] = useState('');
 
-  // Add Category State
+  // Add Category & Live Stock State
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryIcon, setNewCategoryIcon] = useState('Bird');
+  const [newProductSku, setNewProductSku] = useState('');
+  const [newProductRate, setNewProductRate] = useState('280');
+  const [newProductStock, setNewProductStock] = useState('10.0');
   const [addCategoryError, setAddCategoryError] = useState('');
 
   const selectedProduct = useMemo(
@@ -296,44 +299,81 @@ export default function App() {
     });
   };
 
+  const handleOpenAddCategory = () => {
+    setNewProductSku(`FF-${100 + products.length + 1}`);
+    setNewCategoryName('');
+    setNewProductRate('280');
+    setNewProductStock('10.0');
+    setAddCategoryError('');
+    setShowAddCategoryModal(true);
+  };
+
   const handleAddCategorySubmit = (e) => {
     e.preventDefault();
     if (!newCategoryName.trim()) {
-      setAddCategoryError('Category name is required.');
+      setAddCategoryError('Product / Category name is required.');
       return;
     }
-    const cleanLabel = newCategoryName.trim();
+    const rateNum = parseFloat(newProductRate);
+    if (Number.isNaN(rateNum) || rateNum <= 0) {
+      setAddCategoryError('Please enter a valid Rate / KG greater than 0.');
+      return;
+    }
+    const stockNum = parseFloat(newProductStock);
+    if (Number.isNaN(stockNum) || stockNum < 0) {
+      setAddCategoryError('Please enter a valid Available Stock (0 or higher).');
+      return;
+    }
+
+    const cleanName = newCategoryName.trim();
+    const cleanSku = (newProductSku.trim() || `FF-${100 + products.length + 1}`).toUpperCase();
+
+    if (products.some((p) => p.sku.toUpperCase() === cleanSku)) {
+      setAddCategoryError(`SKU "${cleanSku}" already exists. Please use a unique SKU.`);
+      return;
+    }
+
     const slug =
-      cleanLabel
+      cleanName
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '') || `cat-${Date.now()}`;
+        .replace(/^-|-$/g, '') || `prod-${Date.now()}`;
 
-    if (
-      categories.some(
-        (c) =>
-          c.id === slug ||
-          c.label.toLowerCase() === cleanLabel.toLowerCase()
-      )
-    ) {
-      setAddCategoryError('A category with this name already exists.');
-      return;
+    // Add to categories if not existing
+    if (!categories.some((c) => c.label.toLowerCase() === cleanName.toLowerCase())) {
+      const newCat = {
+        id: slug,
+        label: cleanName,
+        icon: newCategoryIcon || 'Bird',
+      };
+      setCategories((prev) => [...prev, newCat]);
     }
 
-    const newCat = {
+    // Add to products in live stock
+    const newProd = {
       id: slug,
-      label: cleanLabel,
-      icon: newCategoryIcon,
+      name: cleanName,
+      subtitle: '',
+      pricePerKg: Math.round(rateNum),
+      category: slug,
+      sku: cleanSku,
+      defaultAddWeight: 1.0,
+      stockKg: Math.round(stockNum * 1000) / 1000,
+      image: '/src/assets/images/chicken_whole_1794998816005.jpg',
     };
 
-    setCategories((prev) => [...prev, newCat]);
+    setProducts((prev) => [...prev, newProd]);
+    setLiveStockKg((prev) => Math.round((prev + newProd.stockKg) * 1000) / 1000);
+
     setShowAddCategoryModal(false);
     setNewCategoryName('');
-    setNewCategoryIcon('Bird');
+    setNewProductSku('');
+    setNewProductRate('280');
+    setNewProductStock('10.0');
     setAddCategoryError('');
     setCartMessage({
       type: 'success',
-      text: `Chicken category "${newCat.label}" added successfully.`,
+      text: `Added "${newProd.name}" (${newProd.sku}) to Live Stock at ₹${newProd.pricePerKg}/kg with ${newProd.stockKg.toFixed(3)} kg stock.`,
     });
   };
 
@@ -501,7 +541,7 @@ export default function App() {
             transactions={transactions}
             onOpenAddCustomer={() => setShowAddCustomerModal(true)}
             categories={categories}
-            onOpenAddCategory={() => setShowAddCategoryModal(true)}
+            onOpenAddCategory={handleOpenAddCategory}
           />
         )}
       </div>
@@ -772,12 +812,12 @@ export default function App() {
           aria-modal="true"
           aria-labelledby="add-category-title"
         >
-          <div className="modal-card" style={{ maxWidth: 440 }}>
+          <div className="modal-card" style={{ maxWidth: 460 }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <FolderPlus size={20} color="#DC2026" />
                 <h3 id="add-category-title" className="modal-title">
-                  Add New Chicken Category
+                  Add New Chicken Category / Product
                 </h3>
               </div>
               <button
@@ -786,7 +826,9 @@ export default function App() {
                 onClick={() => {
                   setShowAddCategoryModal(false);
                   setNewCategoryName('');
-                  setNewCategoryIcon('Bird');
+                  setNewProductSku('');
+                  setNewProductRate('280');
+                  setNewProductStock('10.0');
                   setAddCategoryError('');
                 }}
                 aria-label="Close dialog"
@@ -805,9 +847,51 @@ export default function App() {
                 </div>
               )}
 
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    SKU Code <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="text-input"
+                    style={{ width: '100%', textTransform: 'uppercase', fontWeight: 700 }}
+                    placeholder="e.g. FF-109"
+                    value={newProductSku}
+                    onChange={(e) => {
+                      setNewProductSku(e.target.value.toUpperCase());
+                      if (addCategoryError) setAddCategoryError('');
+                    }}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Category Icon
+                  </label>
+                  <select
+                    className="text-input"
+                    style={{ width: '100%' }}
+                    value={newCategoryIcon}
+                    onChange={(e) => setNewCategoryIcon(e.target.value)}
+                  >
+                    <option value="Bird">Bird (Whole / Desi)</option>
+                    <option value="Drumstick">Drumstick (Legs / Curry)</option>
+                    <option value="Slice">Slice (Breast / Boneless)</option>
+                    <option value="Boxes">Boxes (Pre-cut / Packs)</option>
+                    <option value="Feather">Feather (Wings / Specialty)</option>
+                    <option value="UtensilsCrossed">Utensils (Tikka / Ready)</option>
+                    <option value="Heart">Heart (Offal &amp; Liver)</option>
+                    <option value="Package">Package (Frozen / Bulk)</option>
+                    <option value="Layers">Layers (Assorted / Other)</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
-                  Category Name <span style={{ color: '#DC2026' }}>*</span>
+                  Product Name <span style={{ color: '#DC2026' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -820,29 +904,50 @@ export default function App() {
                     if (addCategoryError) setAddCategoryError('');
                   }}
                   autoFocus
+                  required
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
-                  Category Icon
-                </label>
-                <select
-                  className="text-input"
-                  style={{ width: '100%' }}
-                  value={newCategoryIcon}
-                  onChange={(e) => setNewCategoryIcon(e.target.value)}
-                >
-                  <option value="Bird">Bird (Whole / Country Chicken)</option>
-                  <option value="Drumstick">Drumstick (Legs / Curry)</option>
-                  <option value="Slice">Slice (Breast / Boneless)</option>
-                  <option value="Boxes">Boxes (Pre-cut / Packs)</option>
-                  <option value="Feather">Feather (Wings / Specialty)</option>
-                  <option value="UtensilsCrossed">Utensils (Tikka / Ready to Cook)</option>
-                  <option value="Heart">Heart (Offal &amp; Liver)</option>
-                  <option value="Package">Package (Frozen / Bulk)</option>
-                  <option value="Layers">Layers (Assorted / Other)</option>
-                </select>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Rate / KG (₹) <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    className="text-input"
+                    style={{ width: '100%' }}
+                    placeholder="e.g. 280"
+                    value={newProductRate}
+                    onChange={(e) => {
+                      setNewProductRate(e.target.value);
+                      if (addCategoryError) setAddCategoryError('');
+                    }}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Available Stock (kg) <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.05"
+                    className="text-input"
+                    style={{ width: '100%' }}
+                    placeholder="e.g. 15.000"
+                    value={newProductStock}
+                    onChange={(e) => {
+                      setNewProductStock(e.target.value);
+                      if (addCategoryError) setAddCategoryError('');
+                    }}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="modal-actions" style={{ marginTop: 8 }}>
@@ -852,7 +957,9 @@ export default function App() {
                   onClick={() => {
                     setShowAddCategoryModal(false);
                     setNewCategoryName('');
-                    setNewCategoryIcon('Bird');
+                    setNewProductSku('');
+                    setNewProductRate('280');
+                    setNewProductStock('10.0');
                     setAddCategoryError('');
                   }}
                 >
@@ -864,7 +971,7 @@ export default function App() {
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                 >
                   <Plus size={16} />
-                  <span>Save Category</span>
+                  <span>Save to Live Stock</span>
                 </button>
               </div>
             </form>
