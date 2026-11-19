@@ -28,6 +28,7 @@ export default function ModuleViews({
   onUpdateProduct,
   expenses,
   onAddExpense,
+  onUpdateExpense,
   transactions,
   onOpenAddCustomer,
   categories,
@@ -159,6 +160,49 @@ export default function ModuleViews({
     setExpenseModalMode('Cash');
     setExpenseModalAmount('');
     setExpenseModalError('');
+  };
+
+  // Expense Edit State
+  const [editingExpense, setEditingExpense] = useState(null);
+  const [editExpenseTitle, setEditExpenseTitle] = useState('');
+  const [editExpenseCategory, setEditExpenseCategory] = useState('Operations');
+  const [editExpenseMode, setEditExpenseMode] = useState('Cash');
+  const [editExpenseAmount, setEditExpenseAmount] = useState('');
+  const [editExpenseError, setEditExpenseError] = useState('');
+
+  const handleStartEditExpense = (exp) => {
+    setEditingExpense(exp);
+    setEditExpenseTitle(exp.title || '');
+    setEditExpenseCategory(exp.category || 'Operations');
+    setEditExpenseMode(exp.mode || 'Cash');
+    setEditExpenseAmount(String(exp.amount ?? ''));
+    setEditExpenseError('');
+  };
+
+  const handleSaveEditExpense = (e) => {
+    e.preventDefault();
+    if (!editExpenseTitle.trim()) {
+      setEditExpenseError('Expense description cannot be empty.');
+      return;
+    }
+    const amt = parseFloat(editExpenseAmount);
+    if (Number.isNaN(amt) || amt <= 0) {
+      setEditExpenseError('Please enter a valid amount greater than ₹0.');
+      return;
+    }
+    setEditExpenseError('');
+    if (onUpdateExpense && editingExpense) {
+      onUpdateExpense({
+        ...editingExpense,
+        title: editExpenseTitle.trim(),
+        category: editExpenseCategory,
+        mode: editExpenseMode,
+        amount: Math.round(amt),
+      });
+    }
+    setExpenseSuccessToast(`Updated expense "${editExpenseTitle.trim()}" (₹${Math.round(amt).toLocaleString('en-IN')}) successfully.`);
+    setTimeout(() => setExpenseSuccessToast(''), 3000);
+    setEditingExpense(null);
   };
 
   const handleExportCsv = () => {
@@ -826,6 +870,7 @@ export default function ModuleViews({
                   <th>Mode</th>
                   <th>Time</th>
                   <th>Amount</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -837,6 +882,27 @@ export default function ModuleViews({
                     <td>{exp.time}</td>
                     <td className="tabular-nums" style={{ fontWeight: 800, color: '#DC2026' }}>
                       ₹{exp.amount.toLocaleString('en-IN')}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        style={{
+                          height: 30,
+                          padding: '0 10px',
+                          fontSize: 12,
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => handleStartEditExpense(exp)}
+                        title={`Edit ${exp.title}`}
+                      >
+                        <Pencil size={13} color="#DC2026" />
+                        <span>Edit</span>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -978,6 +1044,138 @@ export default function ModuleViews({
                   >
                     <Plus size={16} />
                     <span>Save Expense</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {editingExpense && (
+          <div
+            className="modal-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-expense-modal-title"
+          >
+            <div className="modal-card" style={{ maxWidth: 440 }}>
+              <div className="modal-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Pencil size={20} color="#DC2026" />
+                  <h3 id="edit-expense-modal-title" className="modal-title">
+                    Edit Expense
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  className="modal-close-btn"
+                  onClick={() => setEditingExpense(null)}
+                  aria-label="Close dialog"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form
+                onSubmit={handleSaveEditExpense}
+                style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}
+              >
+                {editExpenseError && (
+                  <div className="cart-alert" style={{ margin: 0 }}>
+                    {editExpenseError}
+                  </div>
+                )}
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Expense Description <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="text-input"
+                    style={{ width: '100%' }}
+                    value={editExpenseTitle}
+                    onChange={(e) => {
+                      setEditExpenseTitle(e.target.value);
+                      if (editExpenseError) setEditExpenseError('');
+                    }}
+                    autoFocus
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                      Category
+                    </label>
+                    <select
+                      className="text-input"
+                      style={{ width: '100%' }}
+                      value={editExpenseCategory}
+                      onChange={(e) => setEditExpenseCategory(e.target.value)}
+                    >
+                      <option value="Operations">Operations</option>
+                      <option value="Packaging">Packaging</option>
+                      <option value="Transport">Transport</option>
+                      <option value="Staff">Staff</option>
+                      <option value="Maintenance">Maintenance</option>
+                      <option value="Utilities">Utilities</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                      Payment Mode
+                    </label>
+                    <select
+                      className="text-input"
+                      style={{ width: '100%' }}
+                      value={editExpenseMode}
+                      onChange={(e) => setEditExpenseMode(e.target.value)}
+                    >
+                      <option value="Cash">Cash</option>
+                      <option value="UPI">UPI</option>
+                      <option value="Card">Card</option>
+                      <option value="Bank Transfer">Bank Transfer</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Amount (₹) <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    className="text-input"
+                    style={{ width: '100%', fontSize: 16, fontWeight: 700 }}
+                    value={editExpenseAmount}
+                    onChange={(e) => {
+                      setEditExpenseAmount(e.target.value);
+                      if (editExpenseError) setEditExpenseError('');
+                    }}
+                    required
+                  />
+                </div>
+
+                <div className="modal-actions" style={{ marginTop: 8 }}>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setEditingExpense(null)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  >
+                    <Pencil size={15} />
+                    <span>Save Changes</span>
                   </button>
                 </div>
               </form>

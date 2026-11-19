@@ -525,6 +525,16 @@ export default function App() {
     });
   };
 
+  const handleUpdateExpense = (updatedExpense) => {
+    setExpenses((prev) =>
+      prev.map((e) => (e.id === updatedExpense.id ? { ...e, ...updatedExpense } : e))
+    );
+    setCartMessage({
+      type: 'success',
+      text: `Updated expense "${updatedExpense.title}" (₹${Number(updatedExpense.amount).toLocaleString('en-IN')}) successfully.`,
+    });
+  };
+
   const isPOSView = activeModule === 'pos';
 
   return (
@@ -632,6 +642,7 @@ export default function App() {
             onUpdateProduct={handleUpdateProduct}
             expenses={expenses}
             onAddExpense={handleAddExpense}
+            onUpdateExpense={handleUpdateExpense}
             transactions={transactions}
             onOpenAddCustomer={() => setShowAddCustomerModal(true)}
             categories={categories}
