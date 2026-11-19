@@ -464,6 +464,19 @@ export default function App() {
     });
   };
 
+  const handleUpdateSupplier = (updatedSupplier) => {
+    setSuppliers((prev) => {
+      const oldSup = prev.find((s) => s.id === updatedSupplier.id);
+      const diff = (Number(updatedSupplier.payable) || 0) - (Number(oldSup?.payable) || 0);
+      setPurchaseAmount((curr) => Math.max(0, curr + diff));
+      return prev.map((s) => (s.id === updatedSupplier.id ? { ...s, ...updatedSupplier } : s));
+    });
+    setCartMessage({
+      type: 'success',
+      text: `Updated supplier "${updatedSupplier.name}" details (Status: ${updatedSupplier.status}, Payable: ₹${Number(updatedSupplier.payable).toLocaleString('en-IN')}).`,
+    });
+  };
+
   const handleAdjustStock = (productId, addKg) => {
     setProducts((prev) =>
       prev.map((p) =>
@@ -621,6 +634,7 @@ export default function App() {
             khataCustomers={khataCustomers}
             onRecordKhataPayment={handleRecordKhataPayment}
             suppliers={suppliers}
+            onUpdateSupplier={handleUpdateSupplier}
             products={products}
             onAdjustStock={handleAdjustStock}
             onUpdateProduct={handleUpdateProduct}

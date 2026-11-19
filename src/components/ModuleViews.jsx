@@ -21,6 +21,7 @@ export default function ModuleViews({
   khataCustomers,
   onRecordKhataPayment,
   suppliers,
+  onUpdateSupplier,
   products,
   onAdjustStock,
   onUpdateProduct,
@@ -84,6 +85,45 @@ export default function ModuleViews({
       });
     }
     setEditingProduct(null);
+  };
+
+  // Supplier Edit State
+  const [editingSupplier, setEditingSupplier] = useState(null);
+  const [editSupplierStatus, setEditSupplierStatus] = useState('Pending');
+  const [editSupplierPayable, setEditSupplierPayable] = useState('');
+  const [editSupplierBirds, setEditSupplierBirds] = useState('');
+  const [editSupplierWeight, setEditSupplierWeight] = useState('');
+  const [editSupplierError, setEditSupplierError] = useState('');
+
+  const handleStartEditSupplier = (sup) => {
+    setEditingSupplier(sup);
+    setEditSupplierStatus(sup.status || 'Pending');
+    setEditSupplierPayable(String(sup.payable ?? 0));
+    setEditSupplierBirds(String(sup.birdsDelivered ?? ''));
+    setEditSupplierWeight(String(sup.weightKg ?? ''));
+    setEditSupplierError('');
+  };
+
+  const handleSaveEditSupplier = (e) => {
+    e.preventDefault();
+    const payableNum = parseFloat(editSupplierPayable);
+    if (Number.isNaN(payableNum) || payableNum < 0) {
+      setEditSupplierError('Please enter a valid payable amount (0 or higher).');
+      return;
+    }
+    const birdsNum = parseInt(editSupplierBirds, 10);
+    const weightNum = parseFloat(editSupplierWeight);
+
+    if (onUpdateSupplier && editingSupplier) {
+      onUpdateSupplier({
+        ...editingSupplier,
+        status: editSupplierStatus,
+        payable: Math.round(payableNum),
+        birdsDelivered: Number.isNaN(birdsNum) || birdsNum <= 0 ? editingSupplier.birdsDelivered : birdsNum,
+        weightKg: Number.isNaN(weightNum) || weightNum <= 0 ? editingSupplier.weightKg : Math.round(weightNum * 10) / 10,
+      });
+    }
+    setEditingSupplier(null);
   };
 
   const handleExpenseSubmit = (e) => {
@@ -262,6 +302,7 @@ export default function ModuleViews({
                   <th>Net Weight</th>
                   <th>Payable</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -285,12 +326,220 @@ export default function ModuleViews({
                         {sup.status}
                       </span>
                     </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        style={{
+                          height: 30,
+                          padding: '0 10px',
+                          fontSize: 12,
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => handleStartEditSupplier(sup)}
+                        title={`Edit ${sup.name}`}
+                      >
+                        <Pencil size={13} color="#DC2026" />
+                        <span>Edit</span>
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
+
+        {editingSupplier && (
+          <div
+            className="modal-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-supplier-title"
+          >
+            <div className="modal-card" style={{ maxWidth: 460 }}>
+              <div className="modal-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Pencil size={20} color="#DC2026" />
+                  <h3 id="edit-supplier-title" className="modal-title">
+                    Edit Supplier Payment &amp; Status
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  className="modal-close-btn"
+                  onClick={() => setEditingSupplier(null)}
+                  aria-label="Close dialog"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form
+                onSubmit={handleSaveEditSupplier}
+                style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}
+              >
+                {editSupplierError && (
+                  <div className="cart-alert" style={{ margin: 0 }}>
+                    {editSupplierError}
+                  </div>
+                )}
+
+                <div
+                  style={{
+                    background: 'var(--color-bg)',
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 13.5, fontWeight: 800, color: '#17191D' }}>
+                      {editingSupplier.name}
+                    </div>
+                    <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 2 }}>
+                      {editingSupplier.contact} ({editingSupplier.phone})
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#4B5563' }}>
+                      {editingSupplier.birdsDelivered} Birds
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#059669' }}>
+                      {editingSupplier.weightKg.toFixed(1)} kg
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Payment / Settlement Status <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <select
+                    className="text-input"
+                    style={{ width: '100%', fontWeight: 700 }}
+                    value={editSupplierStatus}
+                    onChange={(e) => {
+                      const newStatus = e.target.value;
+                      setEditSupplierStatus(newStatus);
+                      if (newStatus === 'Paid' && parseFloat(editSupplierPayable) > 0) {
+                        setEditSupplierPayable('0');
+                      }
+                    }}
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Settled Today">Settled Today</option>
+                  </select>
+                  <span style={{ fontSize: 11.5, color: '#727988', marginTop: 4, display: 'block' }}>
+                    Select whether the batch is Pending, Paid, or Settled Today.
+                  </span>
+                </div>
+
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                    <label style={{ fontSize: 13, fontWeight: 700 }}>
+                      Payable Amount (₹) <span style={{ color: '#DC2026' }}>*</span>
+                    </label>
+                    {parseFloat(editSupplierPayable) > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditSupplierPayable('0');
+                          setEditSupplierStatus('Paid');
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#059669',
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          padding: 0,
+                          textDecoration: 'underline',
+                        }}
+                      >
+                        Mark as ₹0 (Paid)
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    className="text-input"
+                    style={{ width: '100%', fontSize: 15, fontWeight: 700 }}
+                    placeholder="e.g. 10000 or 0"
+                    value={editSupplierPayable}
+                    onChange={(e) => {
+                      setEditSupplierPayable(e.target.value);
+                      if (editSupplierError) setEditSupplierError('');
+                    }}
+                    required
+                  />
+                  <span style={{ fontSize: 11.5, color: '#727988', marginTop: 4, display: 'block' }}>
+                    Enter current outstanding payable amount (set to 0 when paid).
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                      Birds (Count)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      className="text-input"
+                      style={{ width: '100%' }}
+                      value={editSupplierBirds}
+                      onChange={(e) => setEditSupplierBirds(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                      Net Weight (kg)
+                    </label>
+                    <input
+                      type="number"
+                      min="0.1"
+                      step="0.1"
+                      className="text-input"
+                      style={{ width: '100%' }}
+                      value={editSupplierWeight}
+                      onChange={(e) => setEditSupplierWeight(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="modal-actions" style={{ marginTop: 8 }}>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setEditingSupplier(null)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  >
+                    <Pencil size={15} />
+                    <span>Save Changes</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
