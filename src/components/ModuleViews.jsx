@@ -6,6 +6,7 @@ import {
   Plus,
   Printer,
   ReceiptText,
+  Trash2,
   Truck,
   UserPlus,
   Wallet,
@@ -29,6 +30,7 @@ export default function ModuleViews({
   expenses,
   onAddExpense,
   onUpdateExpense,
+  onDeleteExpense,
   transactions,
   onOpenAddCustomer,
   categories,
@@ -203,6 +205,18 @@ export default function ModuleViews({
     setExpenseSuccessToast(`Updated expense "${editExpenseTitle.trim()}" (₹${Math.round(amt).toLocaleString('en-IN')}) successfully.`);
     setTimeout(() => setExpenseSuccessToast(''), 3000);
     setEditingExpense(null);
+  };
+
+  // Expense Delete State
+  const [expenseToDelete, setExpenseToDelete] = useState(null);
+
+  const handleConfirmDelete = () => {
+    if (onDeleteExpense && expenseToDelete) {
+      onDeleteExpense(expenseToDelete.id);
+      setExpenseSuccessToast(`Deleted expense "${expenseToDelete.title}" successfully.`);
+      setTimeout(() => setExpenseSuccessToast(''), 3000);
+    }
+    setExpenseToDelete(null);
   };
 
   const handleExportCsv = () => {
@@ -884,25 +898,49 @@ export default function ModuleViews({
                       ₹{exp.amount.toLocaleString('en-IN')}
                     </td>
                     <td>
-                      <button
-                        type="button"
-                        className="btn-secondary"
-                        style={{
-                          height: 30,
-                          padding: '0 10px',
-                          fontSize: 12,
-                          fontWeight: 700,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 5,
-                          cursor: 'pointer',
-                        }}
-                        onClick={() => handleStartEditExpense(exp)}
-                        title={`Edit ${exp.title}`}
-                      >
-                        <Pencil size={13} color="#DC2026" />
-                        <span>Edit</span>
-                      </button>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          style={{
+                            height: 30,
+                            padding: '0 10px',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 5,
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => handleStartEditExpense(exp)}
+                          title={`Edit ${exp.title}`}
+                        >
+                          <Pencil size={13} color="#DC2026" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          style={{
+                            height: 30,
+                            padding: '0 8px',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            cursor: 'pointer',
+                            color: '#DC2026',
+                            borderColor: '#FECACA',
+                            background: '#FFF1F2',
+                          }}
+                          onClick={() => setExpenseToDelete(exp)}
+                          title={`Delete ${exp.title}`}
+                        >
+                          <Trash2 size={13} color="#DC2026" />
+                          <span>Delete</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1161,24 +1199,96 @@ export default function ModuleViews({
                   />
                 </div>
 
-                <div className="modal-actions" style={{ marginTop: 8 }}>
+                <div className="modal-actions" style={{ marginTop: 8, justifyContent: 'space-between' }}>
                   <button
                     type="button"
                     className="btn-secondary"
-                    onClick={() => setEditingExpense(null)}
+                    style={{
+                      color: '#DC2026',
+                      borderColor: '#FECACA',
+                      background: '#FFF1F2',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                    }}
+                    onClick={() => {
+                      const toDelete = editingExpense;
+                      setEditingExpense(null);
+                      setExpenseToDelete(toDelete);
+                    }}
                   >
-                    Cancel
+                    <Trash2 size={14} color="#DC2026" />
+                    <span>Delete</span>
                   </button>
-                  <button
-                    type="submit"
-                    className="btn-primary"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                  >
-                    <Pencil size={15} />
-                    <span>Save Changes</span>
-                  </button>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={() => setEditingExpense(null)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn-primary"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                    >
+                      <Pencil size={15} />
+                      <span>Save Changes</span>
+                    </button>
+                  </div>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {expenseToDelete && (
+          <div
+            className="modal-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-expense-title"
+          >
+            <div className="modal-card" style={{ maxWidth: 400, textAlign: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: '50%',
+                    background: '#FEE2E2',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Trash2 size={22} color="#DC2026" />
+                </div>
+              </div>
+              <h3 id="delete-expense-title" className="modal-title" style={{ textAlign: 'center' }}>
+                Delete Expense Record?
+              </h3>
+              <p style={{ margin: '8px 0 16px', fontSize: 13.5, color: '#4B5563' }}>
+                Are you sure you want to delete <strong>&quot;{expenseToDelete.title}&quot;</strong> (₹{expenseToDelete.amount.toLocaleString('en-IN')})? This will update daily expenses immediately.
+              </p>
+              <div className="modal-actions" style={{ justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setExpenseToDelete(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ background: '#DC2026', borderColor: '#DC2026' }}
+                  onClick={handleConfirmDelete}
+                >
+                  Delete Expense
+                </button>
+              </div>
             </div>
           </div>
         )}

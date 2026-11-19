@@ -535,6 +535,15 @@ export default function App() {
     });
   };
 
+  const handleDeleteExpense = (expenseId) => {
+    const expToDelete = expenses.find((e) => e.id === expenseId);
+    setExpenses((prev) => prev.filter((e) => e.id !== expenseId));
+    setCartMessage({
+      type: 'success',
+      text: `Deleted expense "${expToDelete?.title || 'record'}" successfully.`,
+    });
+  };
+
   const isPOSView = activeModule === 'pos';
 
   return (
@@ -643,6 +652,7 @@ export default function App() {
             expenses={expenses}
             onAddExpense={handleAddExpense}
             onUpdateExpense={handleUpdateExpense}
+            onDeleteExpense={handleDeleteExpense}
             transactions={transactions}
             onOpenAddCustomer={() => setShowAddCustomerModal(true)}
             categories={categories}
