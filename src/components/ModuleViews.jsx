@@ -5,6 +5,7 @@ import {
   Pencil,
   Plus,
   Printer,
+  Truck,
   UserPlus,
   Wallet,
   X,
@@ -29,6 +30,7 @@ export default function ModuleViews({
   onOpenAddCustomer,
   categories,
   onOpenAddCategory,
+  onOpenAddSupplier,
 }) {
   const [expenseTitle, setExpenseTitle] = useState('');
   const [expenseAmount, setExpenseAmount] = useState('');
@@ -238,7 +240,16 @@ export default function ModuleViews({
       <div className="pos-main">
         {renderTopBar(
           'Poultry Suppliers & Morning Arrivals',
-          'Live bird & dressed chicken supply batches'
+          'Live bird & dressed chicken supply batches',
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={onOpenAddSupplier}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <Plus size={16} />
+            <span>Add Supplier</span>
+          </button>
         )}
         <div className="module-view-card">
           <div className="module-table-wrap">

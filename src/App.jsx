@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { CheckCircle2, FolderPlus, Lock, Plus, UserPlus, X } from 'lucide-react';
+import { CheckCircle2, FolderPlus, Lock, Plus, Truck, UserPlus, X } from 'lucide-react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import POSHeader from './components/POSHeader';
@@ -45,9 +45,9 @@ export default function App() {
   // Business Accounting state
   const [todaySales, setTodaySales] = useState(12840);
   const [liveStockKg, setLiveStockKg] = useState(45.2);
-  const [purchaseAmount] = useState(7560);
+  const [purchaseAmount, setPurchaseAmount] = useState(7560);
   const [expenses, setExpenses] = useState(INITIAL_EXPENSES);
-  const [suppliers] = useState(INITIAL_SUPPLIERS);
+  const [suppliers, setSuppliers] = useState(INITIAL_SUPPLIERS);
   const [transactions, setTransactions] = useState(INITIAL_TRANSACTIONS);
 
   // Cart Hook & Sale Confirmation Modal
@@ -80,6 +80,17 @@ export default function App() {
   const [newProductRate, setNewProductRate] = useState('280');
   const [newProductStock, setNewProductStock] = useState('10.0');
   const [addCategoryError, setAddCategoryError] = useState('');
+
+  // Add Supplier State
+  const [showAddSupplierModal, setShowAddSupplierModal] = useState(false);
+  const [newSupplierName, setNewSupplierName] = useState('');
+  const [newSupplierContact, setNewSupplierContact] = useState('');
+  const [newSupplierPhone, setNewSupplierPhone] = useState('');
+  const [newSupplierBirds, setNewSupplierBirds] = useState('');
+  const [newSupplierWeight, setNewSupplierWeight] = useState('');
+  const [newSupplierPayable, setNewSupplierPayable] = useState('');
+  const [newSupplierStatus, setNewSupplierStatus] = useState('Pending');
+  const [addSupplierError, setAddSupplierError] = useState('');
 
   const selectedProduct = useMemo(
     () => products.find((p) => p.id === selectedProductId) || products[0],
@@ -377,6 +388,82 @@ export default function App() {
     });
   };
 
+  const handleOpenAddSupplier = () => {
+    setNewSupplierName('');
+    setNewSupplierContact('');
+    setNewSupplierPhone('');
+    setNewSupplierBirds('');
+    setNewSupplierWeight('');
+    setNewSupplierPayable('');
+    setNewSupplierStatus('Pending');
+    setAddSupplierError('');
+    setShowAddSupplierModal(true);
+  };
+
+  const handleAddSupplierSubmit = (e) => {
+    e.preventDefault();
+    if (!newSupplierName.trim()) {
+      setAddSupplierError('Supplier / Farm name is required.');
+      return;
+    }
+    if (!newSupplierContact.trim()) {
+      setAddSupplierError('Contact person name is required.');
+      return;
+    }
+    const cleanPhone = newSupplierPhone.replace(/\D/g, '');
+    if (cleanPhone.length !== 10) {
+      setAddSupplierError('Contact phone number must be exactly 10 digits.');
+      return;
+    }
+    const birdsNum = parseInt(newSupplierBirds, 10);
+    if (Number.isNaN(birdsNum) || birdsNum <= 0) {
+      setAddSupplierError('Please enter a valid bird count greater than 0.');
+      return;
+    }
+    const weightNum = parseFloat(newSupplierWeight);
+    if (Number.isNaN(weightNum) || weightNum <= 0) {
+      setAddSupplierError('Please enter a valid net weight in kg.');
+      return;
+    }
+    const payableNum = parseFloat(newSupplierPayable);
+    if (Number.isNaN(payableNum) || payableNum < 0) {
+      setAddSupplierError('Please enter a valid payable amount (0 or higher).');
+      return;
+    }
+
+    const formattedPhone = `+91 ${cleanPhone.slice(0, 5)} ${cleanPhone.slice(5)}`;
+    const newSup = {
+      id: `sup-${Date.now()}`,
+      name: newSupplierName.trim(),
+      contact: newSupplierContact.trim(),
+      phone: formattedPhone,
+      birdsDelivered: birdsNum,
+      weightKg: Math.round(weightNum * 10) / 10,
+      payable: Math.round(payableNum),
+      status: newSupplierStatus,
+    };
+
+    setSuppliers((prev) => [newSup, ...prev]);
+    if (newSup.payable > 0) {
+      setPurchaseAmount((prev) => prev + newSup.payable);
+    }
+
+    setShowAddSupplierModal(false);
+    setNewSupplierName('');
+    setNewSupplierContact('');
+    setNewSupplierPhone('');
+    setNewSupplierBirds('');
+    setNewSupplierWeight('');
+    setNewSupplierPayable('');
+    setNewSupplierStatus('Pending');
+    setAddSupplierError('');
+
+    setCartMessage({
+      type: 'success',
+      text: `Supplier "${newSup.name}" batch (${newSup.weightKg} kg, ${newSup.birdsDelivered} birds) added successfully.`,
+    });
+  };
+
   const handleAdjustStock = (productId, addKg) => {
     setProducts((prev) =>
       prev.map((p) =>
@@ -543,6 +630,7 @@ export default function App() {
             onOpenAddCustomer={() => setShowAddCustomerModal(true)}
             categories={categories}
             onOpenAddCategory={handleOpenAddCategory}
+            onOpenAddSupplier={handleOpenAddSupplier}
           />
         )}
       </div>
@@ -973,6 +1061,263 @@ export default function App() {
                 >
                   <Plus size={16} />
                   <span>Save to Live Stock</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAddSupplierModal && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-supplier-title"
+        >
+          <div className="modal-card" style={{ maxWidth: 480 }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Truck size={20} color="#DC2026" />
+                <h3 id="add-supplier-title" className="modal-title">
+                  Add Supplier
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => {
+                  setShowAddSupplierModal(false);
+                  setNewSupplierName('');
+                  setNewSupplierContact('');
+                  setNewSupplierPhone('');
+                  setNewSupplierBirds('');
+                  setNewSupplierWeight('');
+                  setNewSupplierPayable('');
+                  setNewSupplierStatus('Pending');
+                  setAddSupplierError('');
+                }}
+                aria-label="Close dialog"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleAddSupplierSubmit}
+              style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}
+            >
+              {addSupplierError && (
+                <div className="cart-alert" style={{ margin: 0 }}>
+                  {addSupplierError}
+                </div>
+              )}
+
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                  Supplier <span style={{ color: '#DC2026' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  className="text-input"
+                  style={{ width: '100%' }}
+                  placeholder="e.g. Sahyadri Poultry Farms"
+                  value={newSupplierName}
+                  onChange={(e) => {
+                    setNewSupplierName(e.target.value);
+                    if (addSupplierError) setAddSupplierError('');
+                  }}
+                  autoFocus
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Contact Person <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="text-input"
+                    style={{ width: '100%' }}
+                    placeholder="e.g. Ramesh Patil"
+                    value={newSupplierContact}
+                    onChange={(e) => {
+                      setNewSupplierContact(e.target.value);
+                      if (addSupplierError) setAddSupplierError('');
+                    }}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Phone Number <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <span
+                      style={{
+                        height: 38,
+                        padding: '0 9px',
+                        background: '#F1F4F9',
+                        border: '1px solid #D7DDE6',
+                        borderRight: 'none',
+                        borderTopLeftRadius: 6,
+                        borderBottomLeftRadius: 6,
+                        display: 'flex',
+                        alignItems: 'center',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: '#4B5565',
+                      }}
+                    >
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={10}
+                      className="text-input"
+                      style={{
+                        width: '100%',
+                        borderTopLeftRadius: 0,
+                        borderBottomLeftRadius: 0,
+                        fontWeight: 600,
+                      }}
+                      placeholder="9822055410"
+                      value={newSupplierPhone}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setNewSupplierPhone(digits);
+                        if (addSupplierError) setAddSupplierError('');
+                      }}
+                      required
+                    />
+                  </div>
+                  <span style={{ fontSize: 11.5, color: '#727988', marginTop: 4, display: 'block' }}>
+                    Must be exactly 10 digits.
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Birds <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    className="text-input"
+                    style={{ width: '100%' }}
+                    placeholder="e.g. 120"
+                    value={newSupplierBirds}
+                    onChange={(e) => {
+                      setNewSupplierBirds(e.target.value);
+                      if (addSupplierError) setAddSupplierError('');
+                    }}
+                    required
+                  />
+                  <span style={{ fontSize: 11.5, color: '#727988', marginTop: 4, display: 'block' }}>
+                    Total bird count in this batch.
+                  </span>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Net Weight (kg) <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0.1"
+                    step="0.1"
+                    className="text-input"
+                    style={{ width: '100%' }}
+                    placeholder="e.g. 196.5"
+                    value={newSupplierWeight}
+                    onChange={(e) => {
+                      setNewSupplierWeight(e.target.value);
+                      if (addSupplierError) setAddSupplierError('');
+                    }}
+                    required
+                  />
+                  <span style={{ fontSize: 11.5, color: '#727988', marginTop: 4, display: 'block' }}>
+                    Total net weight in kilograms.
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Payable (₹) <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    className="text-input"
+                    style={{ width: '100%' }}
+                    placeholder="e.g. 7560"
+                    value={newSupplierPayable}
+                    onChange={(e) => {
+                      setNewSupplierPayable(e.target.value);
+                      if (addSupplierError) setAddSupplierError('');
+                    }}
+                    required
+                  />
+                  <span style={{ fontSize: 11.5, color: '#727988', marginTop: 4, display: 'block' }}>
+                    Total payable amount for this batch.
+                  </span>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Status <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <select
+                    className="text-input"
+                    style={{ width: '100%' }}
+                    value={newSupplierStatus}
+                    onChange={(e) => setNewSupplierStatus(e.target.value)}
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Settled Today">Settled Today</option>
+                    <option value="Paid">Paid</option>
+                  </select>
+                  <span style={{ fontSize: 11.5, color: '#727988', marginTop: 4, display: 'block' }}>
+                    Current batch settlement status.
+                  </span>
+                </div>
+              </div>
+
+              <div className="modal-actions" style={{ marginTop: 8 }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => {
+                    setShowAddSupplierModal(false);
+                    setNewSupplierName('');
+                    setNewSupplierContact('');
+                    setNewSupplierPhone('');
+                    setNewSupplierBirds('');
+                    setNewSupplierWeight('');
+                    setNewSupplierPayable('');
+                    setNewSupplierStatus('Pending');
+                    setAddSupplierError('');
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Plus size={16} />
+                  <span>Save Supplier</span>
                 </button>
               </div>
             </form>

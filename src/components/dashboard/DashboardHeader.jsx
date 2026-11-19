@@ -100,3 +100,4 @@ export default function DashboardHeader({ onRefresh, onDateChange, selectedDate 
     </div>
   );
 }
+

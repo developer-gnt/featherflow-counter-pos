@@ -111,3 +111,4 @@ export default function StockStatus({ onNavigate }) {
     </div>
   );
 }
+

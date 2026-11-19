@@ -59,11 +59,11 @@ export default function TopProducts({ products = [], onChangePrice }) {
   const allItems =
     products.length > 0
       ? products.map((prod) => ({
-          ...prod,
-          soldWeight:
-            KNOWN_SOLD_WEIGHTS[prod.id] ||
-            `${Math.max(5, Math.round((prod.stockKg || 10) * 1.8 * 10) / 10)} kg sold`,
-        }))
+        ...prod,
+        soldWeight:
+          KNOWN_SOLD_WEIGHTS[prod.id] ||
+          `${Math.max(5, Math.round((prod.stockKg || 10) * 1.8 * 10) / 10)} kg sold`,
+      }))
       : DEFAULT_TOP_PRODUCTS;
 
   return (
@@ -73,7 +73,7 @@ export default function TopProducts({ products = [], onChangePrice }) {
           <span className="dash-card-icon" style={{ color: '#F59E0B' }} aria-hidden="true">
             <Trophy size={18} />
           </span>
-          <h2 className="dash-card-title">Top Products</h2>
+          <h2 className="dash-card-title">Today's Price</h2>
           <span style={{ fontSize: 12, color: '#64748B', fontWeight: 600, marginLeft: 6 }}>
             ({allItems.length} items)
           </span>

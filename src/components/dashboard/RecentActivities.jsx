@@ -65,3 +65,4 @@ export default function RecentActivities({ onNavigate }) {
     </div>
   );
 }
+
