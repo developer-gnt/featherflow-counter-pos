@@ -702,6 +702,12 @@ select:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+.weight-input::placeholder {
+  color: #94A3B8;
+  font-weight: 800;
+  opacity: 1;
+}
+
 .weight-input:focus {
   outline: none;
   background: var(--color-bg);
