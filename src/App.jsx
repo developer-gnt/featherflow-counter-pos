@@ -519,6 +519,10 @@ export default function App() {
       },
       ...prev,
     ]);
+    setCartMessage({
+      type: 'success',
+      text: `Recorded expense "${newExp.title}" (₹${Number(newExp.amount).toLocaleString('en-IN')}) successfully.`,
+    });
   };
 
   const isPOSView = activeModule === 'pos';

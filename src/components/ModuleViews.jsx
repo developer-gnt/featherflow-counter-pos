@@ -5,6 +5,7 @@ import {
   Pencil,
   Plus,
   Printer,
+  ReceiptText,
   Truck,
   UserPlus,
   Wallet,
@@ -36,6 +37,14 @@ export default function ModuleViews({
   const [expenseTitle, setExpenseTitle] = useState('');
   const [expenseAmount, setExpenseAmount] = useState('');
   const [expenseCategory, setExpenseCategory] = useState('Operations');
+  const [inlineExpenseError, setInlineExpenseError] = useState('');
+  const [expenseSuccessToast, setExpenseSuccessToast] = useState('');
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [expenseModalTitle, setExpenseModalTitle] = useState('');
+  const [expenseModalCategory, setExpenseModalCategory] = useState('Operations');
+  const [expenseModalMode, setExpenseModalMode] = useState('Cash');
+  const [expenseModalAmount, setExpenseModalAmount] = useState('');
+  const [expenseModalError, setExpenseModalError] = useState('');
   const [paymentDraft, setPaymentDraft] = useState({});
   const [drawerOpeningCash, setDrawerOpeningCash] = useState(2500);
   const [printerAutoReceipt, setPrinterAutoReceipt] = useState(true);
@@ -128,16 +137,58 @@ export default function ModuleViews({
 
   const handleExpenseSubmit = (e) => {
     e.preventDefault();
+    if (!expenseTitle.trim()) {
+      setInlineExpenseError('Please enter an expense description.');
+      return;
+    }
     const amt = parseFloat(expenseAmount);
-    if (!expenseTitle.trim() || Number.isNaN(amt) || amt <= 0) return;
-    onAddExpense({
-      title: expenseTitle.trim(),
-      category: expenseCategory,
-      amount: Math.round(amt),
-      mode: 'Cash',
-    });
+    if (Number.isNaN(amt) || amt <= 0) {
+      setInlineExpenseError('Please enter a valid amount greater than ₹0.');
+      return;
+    }
+    setInlineExpenseError('');
+    if (onAddExpense) {
+      onAddExpense({
+        title: expenseTitle.trim(),
+        category: expenseCategory,
+        amount: Math.round(amt),
+        mode: 'Cash',
+      });
+    }
+    setExpenseSuccessToast(`Expense "${expenseTitle.trim()}" (₹${Math.round(amt).toLocaleString('en-IN')}) recorded successfully.`);
+    setTimeout(() => setExpenseSuccessToast(''), 3000);
     setExpenseTitle('');
     setExpenseAmount('');
+  };
+
+  const handleModalExpenseSubmit = (e) => {
+    e.preventDefault();
+    if (!expenseModalTitle.trim()) {
+      setExpenseModalError('Please enter an expense description.');
+      return;
+    }
+    const amt = parseFloat(expenseModalAmount);
+    if (Number.isNaN(amt) || amt <= 0) {
+      setExpenseModalError('Please enter a valid amount greater than ₹0.');
+      return;
+    }
+    setExpenseModalError('');
+    if (onAddExpense) {
+      onAddExpense({
+        title: expenseModalTitle.trim(),
+        category: expenseModalCategory,
+        amount: Math.round(amt),
+        mode: expenseModalMode,
+      });
+    }
+    setExpenseSuccessToast(`Expense "${expenseModalTitle.trim()}" (₹${Math.round(amt).toLocaleString('en-IN')}) recorded successfully.`);
+    setTimeout(() => setExpenseSuccessToast(''), 3000);
+    setShowExpenseModal(false);
+    setExpenseModalTitle('');
+    setExpenseModalCategory('Operations');
+    setExpenseModalMode('Cash');
+    setExpenseModalAmount('');
+    setExpenseModalError('');
   };
 
   const handleExportCsv = () => {
@@ -771,16 +822,48 @@ export default function ModuleViews({
   if (activeModule === 'expenses') {
     return (
       <div className="pos-main">
-        {renderTopBar('Daily Counter Expenses', 'Record ice, bags, transport, and shop upkeep')}
+        {renderTopBar(
+          'Daily Counter Expenses',
+          'Record ice, bags, transport, and shop upkeep',
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => {
+              setExpenseModalTitle('');
+              setExpenseModalAmount('');
+              setExpenseModalError('');
+              setShowExpenseModal(true);
+            }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <Plus size={16} />
+            <span>Add Expense</span>
+          </button>
+        )}
         <div className="module-view-card">
+          {expenseSuccessToast && (
+            <div className="cart-success" style={{ margin: '0 0 12px' }} role="status">
+              {expenseSuccessToast}
+            </div>
+          )}
+          {inlineExpenseError && (
+            <div className="cart-alert" style={{ margin: '0 0 12px' }} role="alert">
+              {inlineExpenseError}
+            </div>
+          )}
+
           <form className="inline-form-row" onSubmit={handleExpenseSubmit}>
             <input
               type="text"
               className="text-input"
               placeholder="Expense description (e.g. Ice blocks)"
               value={expenseTitle}
-              onChange={(e) => setExpenseTitle(e.target.value)}
+              onChange={(e) => {
+                setExpenseTitle(e.target.value);
+                if (inlineExpenseError) setInlineExpenseError('');
+              }}
               style={{ flex: 2, minWidth: 180 }}
+              required
             />
             <select
               className="text-input"
@@ -791,14 +874,22 @@ export default function ModuleViews({
               <option value="Packaging">Packaging</option>
               <option value="Transport">Transport</option>
               <option value="Staff">Staff</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Utilities">Utilities</option>
             </select>
             <input
               type="number"
+              min="1"
+              step="1"
               className="text-input"
               placeholder="₹ Amount"
               value={expenseAmount}
-              onChange={(e) => setExpenseAmount(e.target.value)}
+              onChange={(e) => {
+                setExpenseAmount(e.target.value);
+                if (inlineExpenseError) setInlineExpenseError('');
+              }}
               style={{ width: 120 }}
+              required
             />
             <button type="submit" className="btn-primary">
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
@@ -835,6 +926,146 @@ export default function ModuleViews({
             </table>
           </div>
         </div>
+
+        {showExpenseModal && (
+          <div
+            className="modal-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-expense-modal-title"
+          >
+            <div className="modal-card" style={{ maxWidth: 440 }}>
+              <div className="modal-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <ReceiptText size={20} color="#DC2026" />
+                  <h3 id="add-expense-modal-title" className="modal-title">
+                    Record New Expense
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  className="modal-close-btn"
+                  onClick={() => {
+                    setShowExpenseModal(false);
+                    setExpenseModalError('');
+                  }}
+                  aria-label="Close dialog"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form
+                onSubmit={handleModalExpenseSubmit}
+                style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}
+              >
+                {expenseModalError && (
+                  <div className="cart-alert" style={{ margin: 0 }}>
+                    {expenseModalError}
+                  </div>
+                )}
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Expense Description <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="text-input"
+                    style={{ width: '100%' }}
+                    placeholder="e.g. Morning Ice Blocks, Carry Bags"
+                    value={expenseModalTitle}
+                    onChange={(e) => {
+                      setExpenseModalTitle(e.target.value);
+                      if (expenseModalError) setExpenseModalError('');
+                    }}
+                    autoFocus
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                      Category
+                    </label>
+                    <select
+                      className="text-input"
+                      style={{ width: '100%' }}
+                      value={expenseModalCategory}
+                      onChange={(e) => setExpenseModalCategory(e.target.value)}
+                    >
+                      <option value="Operations">Operations</option>
+                      <option value="Packaging">Packaging</option>
+                      <option value="Transport">Transport</option>
+                      <option value="Staff">Staff</option>
+                      <option value="Maintenance">Maintenance</option>
+                      <option value="Utilities">Utilities</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                      Payment Mode
+                    </label>
+                    <select
+                      className="text-input"
+                      style={{ width: '100%' }}
+                      value={expenseModalMode}
+                      onChange={(e) => setExpenseModalMode(e.target.value)}
+                    >
+                      <option value="Cash">Cash</option>
+                      <option value="UPI">UPI</option>
+                      <option value="Card">Card</option>
+                      <option value="Bank Transfer">Bank Transfer</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                    Amount (₹) <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    className="text-input"
+                    style={{ width: '100%', fontSize: 16, fontWeight: 700 }}
+                    placeholder="e.g. 500"
+                    value={expenseModalAmount}
+                    onChange={(e) => {
+                      setExpenseModalAmount(e.target.value);
+                      if (expenseModalError) setExpenseModalError('');
+                    }}
+                    required
+                  />
+                </div>
+
+                <div className="modal-actions" style={{ marginTop: 8 }}>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      setShowExpenseModal(false);
+                      setExpenseModalError('');
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  >
+                    <Plus size={16} />
+                    <span>Save Expense</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
