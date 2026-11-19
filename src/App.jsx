@@ -260,12 +260,18 @@ export default function App() {
       setAddCustomerError('Customer or business name is required.');
       return;
     }
+    const cleanPhone = newCustomerPhone.replace(/\D/g, '');
+    if (cleanPhone.length !== 10) {
+      setAddCustomerError('Phone number must be exactly 10 digits.');
+      return;
+    }
+    const formattedPhone = `+91 ${cleanPhone.slice(0, 5)} ${cleanPhone.slice(5)}`;
     const initialBal = parseFloat(newCustomerBalance);
     const validBal = Number.isNaN(initialBal) ? 0 : Math.round(initialBal);
     const newCust = {
       id: `kh-${Date.now()}`,
       name: newCustomerName.trim(),
-      phone: newCustomerPhone.trim() || '—',
+      phone: formattedPhone,
       balance: validBal,
       lastOrder: 'Just added',
     };
@@ -573,17 +579,58 @@ export default function App() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  className="text-input"
-                  style={{ width: '100%' }}
-                  placeholder="e.g. +91 98204 11230"
-                  value={newCustomerPhone}
-                  onChange={(e) => setNewCustomerPhone(e.target.value)}
-                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                  <label style={{ fontSize: 13, fontWeight: 700 }}>
+                    Phone Number <span style={{ color: '#DC2026' }}>*</span>
+                  </label>
+                  <span
+                    style={{
+                      fontSize: 11.5,
+                      fontWeight: 700,
+                      color: newCustomerPhone.length === 10 ? '#16A34A' : '#727988',
+                    }}
+                  >
+                    {newCustomerPhone.length}/10 digits
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: 38,
+                      padding: '0 12px',
+                      background: 'var(--color-bg)',
+                      border: '1px solid var(--color-border)',
+                      borderRight: 'none',
+                      borderRadius: '9px 0 0 9px',
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: '#4B5563',
+                      userSelect: 'none',
+                    }}
+                  >
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    className="text-input"
+                    style={{
+                      width: '100%',
+                      borderRadius: '0 9px 9px 0',
+                    }}
+                    placeholder="Enter 10-digit mobile number"
+                    value={newCustomerPhone}
+                    onChange={(e) => {
+                      const clean = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setNewCustomerPhone(clean);
+                      if (addCustomerError) setAddCustomerError('');
+                    }}
+                  />
+                </div>
               </div>
 
               <div>
