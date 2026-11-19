@@ -585,9 +585,14 @@ export default function App() {
                   </label>
                   <span
                     style={{
-                      fontSize: 11.5,
+                      fontSize: 12,
                       fontWeight: 700,
-                      color: newCustomerPhone.length === 10 ? '#16A34A' : '#727988',
+                      color:
+                        newCustomerPhone.length === 10
+                          ? '#16A34A'
+                          : newCustomerPhone.length > 0
+                          ? '#DC2026'
+                          : '#727988',
                     }}
                   >
                     {newCustomerPhone.length}/10 digits
@@ -600,11 +605,12 @@ export default function App() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       height: 38,
-                      padding: '0 12px',
+                      padding: '0 10px',
                       background: 'var(--color-bg)',
                       border: '1px solid var(--color-border)',
                       borderRight: 'none',
-                      borderRadius: '9px 0 0 9px',
+                      borderTopLeftRadius: 9,
+                      borderBottomLeftRadius: 9,
                       fontSize: 13,
                       fontWeight: 700,
                       color: '#4B5563',
@@ -620,17 +626,25 @@ export default function App() {
                     className="text-input"
                     style={{
                       width: '100%',
-                      borderRadius: '0 9px 9px 0',
+                      borderTopLeftRadius: 0,
+                      borderBottomLeftRadius: 0,
+                      letterSpacing: '0.04em',
+                      fontWeight: 600,
                     }}
-                    placeholder="Enter 10-digit mobile number"
+                    placeholder="9820411230"
                     value={newCustomerPhone}
                     onChange={(e) => {
-                      const clean = e.target.value.replace(/\D/g, '').slice(0, 10);
-                      setNewCustomerPhone(clean);
-                      if (addCustomerError) setAddCustomerError('');
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setNewCustomerPhone(digits);
+                      if (addCustomerError) {
+                        setAddCustomerError('');
+                      }
                     }}
                   />
                 </div>
+                <span style={{ fontSize: 11.5, color: '#727988', marginTop: 4, display: 'block' }}>
+                  Must be exactly 10 digits (numbers only).
+                </span>
               </div>
 
               <div>
