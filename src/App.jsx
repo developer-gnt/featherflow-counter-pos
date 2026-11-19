@@ -7,7 +7,6 @@ import WeightPanel from './components/WeightPanel';
 import CategoryNavigation from './components/CategoryNavigation';
 import ProductGrid from './components/ProductGrid';
 import CartPanel from './components/CartPanel';
-import SummaryCards from './components/SummaryCards';
 import ModuleViews from './components/ModuleViews';
 import {
   CATEGORIES,
@@ -587,17 +586,6 @@ export default function App() {
                   setActiveCategory('all');
                   setSearchQuery('');
                 }}
-              />
-
-              <SummaryCards
-                stats={{
-                  todaySales,
-                  liveStockKg,
-                  khataBalance,
-                  purchaseAmount,
-                  expensesAmount,
-                }}
-                onOpenModule={setActiveModule}
               />
             </main>
 
