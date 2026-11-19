@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { IndianRupee, Pencil, X } from 'lucide-react';
 import DashboardHeader from './DashboardHeader';
-import DashboardStats from './DashboardStats';
+import SummaryCards from '../SummaryCards';
 import TopProducts from './TopProducts';
 import SalesOverview from './SalesOverview';
 import StockStatus from './StockStatus';
@@ -75,8 +75,8 @@ export default function BusinessDashboard({
         onRefresh={handleRefresh}
       />
 
-      {/* 2. KPI Cards (4 in a row) */}
-      <DashboardStats stats={stats} />
+      {/* 2. Summary Cards (6 in a row) */}
+      <SummaryCards stats={stats} onOpenModule={onNavigate} />
 
       {/* 3. Top Products (Full-width Card) */}
       <TopProducts
@@ -210,3 +210,4 @@ export default function BusinessDashboard({
     </div>
   );
 }
+
