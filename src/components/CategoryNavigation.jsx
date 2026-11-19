@@ -5,11 +5,14 @@ import {
   CircleDot,
   Drumstick,
   Feather,
+  FolderPlus,
   Heart,
+  Layers,
   LayoutGrid,
   Package,
   Search,
   Slice,
+  UtensilsCrossed,
   X,
 } from 'lucide-react';
 import { CATEGORIES } from '../data/products';
@@ -24,6 +27,9 @@ const ICON_MAP = {
   Heart,
   CircleDot,
   Package,
+  FolderPlus,
+  Layers,
+  UtensilsCrossed,
 };
 
 export default function CategoryNavigation({
@@ -32,11 +38,12 @@ export default function CategoryNavigation({
   searchQuery,
   onChangeSearch,
   filteredCount,
+  categories = CATEGORIES,
 }) {
   return (
     <div className="category-toolbar">
       <div className="category-strip" role="tablist" aria-label="Product categories">
-        {CATEGORIES.map((category) => {
+        {(categories || CATEGORIES).map((category) => {
           const Icon = ICON_MAP[category.icon] || LayoutGrid;
           const isActive = activeCategory === category.id;
           return (

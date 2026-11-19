@@ -25,6 +25,8 @@ export default function ModuleViews({
   onAddExpense,
   transactions,
   onOpenAddCustomer,
+  categories,
+  onOpenAddCategory,
 }) {
   const [expenseTitle, setExpenseTitle] = useState('');
   const [expenseAmount, setExpenseAmount] = useState('');
@@ -314,7 +316,16 @@ export default function ModuleViews({
       <div className="pos-main">
         {renderTopBar(
           activeModule === 'stock' ? 'Live Chicken Stock' : 'Products & Daily Rates',
-          'Available cut weights and counter pricing per KG'
+          'Available cut weights and counter pricing per KG',
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={onOpenAddCategory}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <Plus size={16} />
+            <span>Add Category</span>
+          </button>
         )}
         <div className="module-view-card">
           <div className="module-table-wrap">
@@ -708,7 +719,19 @@ export default function ModuleViews({
   if (activeModule === 'categories') {
     return (
       <div className="pos-main">
-        {renderTopBar('Product Categories', 'Manage poultry cut groups displayed on the POS grid')}
+        {renderTopBar(
+          'Product Categories',
+          'Manage poultry cut groups displayed on the POS grid',
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={onOpenAddCategory}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <Plus size={16} />
+            <span>Add Category</span>
+          </button>
+        )}
         <div className="module-view-card">
           <div
             style={{
@@ -717,7 +740,7 @@ export default function ModuleViews({
               gap: 12,
             }}
           >
-            {CATEGORIES.map((cat) => (
+            {(categories || CATEGORIES).map((cat) => (
               <div
                 key={cat.id}
                 style={{

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { CheckCircle2, Lock, UserPlus, X } from 'lucide-react';
+import { CheckCircle2, FolderPlus, Lock, Plus, UserPlus, X } from 'lucide-react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import POSHeader from './components/POSHeader';
@@ -10,6 +10,7 @@ import CartPanel from './components/CartPanel';
 import SummaryCards from './components/SummaryCards';
 import ModuleViews from './components/ModuleViews';
 import {
+  CATEGORIES,
   INITIAL_EXPENSES,
   INITIAL_KHATA_CUSTOMERS,
   INITIAL_SUPPLIERS,
@@ -28,6 +29,7 @@ export default function App() {
 
   // Catalog & Scale state
   const [products, setProducts] = useState(PRODUCTS);
+  const [categories, setCategories] = useState(CATEGORIES);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProductId, setSelectedProductId] = useState(PRODUCTS[0].id);
@@ -69,6 +71,12 @@ export default function App() {
   const [newCustomerPhone, setNewCustomerPhone] = useState('');
   const [newCustomerBalance, setNewCustomerBalance] = useState('');
   const [addCustomerError, setAddCustomerError] = useState('');
+
+  // Add Category State
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryIcon, setNewCategoryIcon] = useState('Bird');
+  const [addCategoryError, setAddCategoryError] = useState('');
 
   const selectedProduct = useMemo(
     () => products.find((p) => p.id === selectedProductId) || products[0],
@@ -288,6 +296,47 @@ export default function App() {
     });
   };
 
+  const handleAddCategorySubmit = (e) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) {
+      setAddCategoryError('Category name is required.');
+      return;
+    }
+    const cleanLabel = newCategoryName.trim();
+    const slug =
+      cleanLabel
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') || `cat-${Date.now()}`;
+
+    if (
+      categories.some(
+        (c) =>
+          c.id === slug ||
+          c.label.toLowerCase() === cleanLabel.toLowerCase()
+      )
+    ) {
+      setAddCategoryError('A category with this name already exists.');
+      return;
+    }
+
+    const newCat = {
+      id: slug,
+      label: cleanLabel,
+      icon: newCategoryIcon,
+    };
+
+    setCategories((prev) => [...prev, newCat]);
+    setShowAddCategoryModal(false);
+    setNewCategoryName('');
+    setNewCategoryIcon('Bird');
+    setAddCategoryError('');
+    setCartMessage({
+      type: 'success',
+      text: `Chicken category "${newCat.label}" added successfully.`,
+    });
+  };
+
   const handleAdjustStock = (productId, addKg) => {
     setProducts((prev) =>
       prev.map((p) =>
@@ -386,6 +435,7 @@ export default function App() {
                 searchQuery={searchQuery}
                 onChangeSearch={setSearchQuery}
                 filteredCount={filteredProducts.length}
+                categories={categories}
               />
 
               <ProductGrid
@@ -450,6 +500,8 @@ export default function App() {
             onAddExpense={handleAddExpense}
             transactions={transactions}
             onOpenAddCustomer={() => setShowAddCustomerModal(true)}
+            categories={categories}
+            onOpenAddCategory={() => setShowAddCategoryModal(true)}
           />
         )}
       </div>
@@ -706,6 +758,113 @@ export default function App() {
                 >
                   <UserPlus size={16} />
                   <span>Save Customer</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAddCategoryModal && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-category-title"
+        >
+          <div className="modal-card" style={{ maxWidth: 440 }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FolderPlus size={20} color="#DC2026" />
+                <h3 id="add-category-title" className="modal-title">
+                  Add New Chicken Category
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => {
+                  setShowAddCategoryModal(false);
+                  setNewCategoryName('');
+                  setNewCategoryIcon('Bird');
+                  setAddCategoryError('');
+                }}
+                aria-label="Close dialog"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleAddCategorySubmit}
+              style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}
+            >
+              {addCategoryError && (
+                <div className="cart-alert" style={{ margin: 0 }}>
+                  {addCategoryError}
+                </div>
+              )}
+
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                  Category Name <span style={{ color: '#DC2026' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  className="text-input"
+                  style={{ width: '100%' }}
+                  placeholder="e.g. Desi / Country Chicken, Biryani Cut"
+                  value={newCategoryName}
+                  onChange={(e) => {
+                    setNewCategoryName(e.target.value);
+                    if (addCategoryError) setAddCategoryError('');
+                  }}
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 5 }}>
+                  Category Icon
+                </label>
+                <select
+                  className="text-input"
+                  style={{ width: '100%' }}
+                  value={newCategoryIcon}
+                  onChange={(e) => setNewCategoryIcon(e.target.value)}
+                >
+                  <option value="Bird">Bird (Whole / Country Chicken)</option>
+                  <option value="Drumstick">Drumstick (Legs / Curry)</option>
+                  <option value="Slice">Slice (Breast / Boneless)</option>
+                  <option value="Boxes">Boxes (Pre-cut / Packs)</option>
+                  <option value="Feather">Feather (Wings / Specialty)</option>
+                  <option value="UtensilsCrossed">Utensils (Tikka / Ready to Cook)</option>
+                  <option value="Heart">Heart (Offal &amp; Liver)</option>
+                  <option value="Package">Package (Frozen / Bulk)</option>
+                  <option value="Layers">Layers (Assorted / Other)</option>
+                </select>
+              </div>
+
+              <div className="modal-actions" style={{ marginTop: 8 }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => {
+                    setShowAddCategoryModal(false);
+                    setNewCategoryName('');
+                    setNewCategoryIcon('Bird');
+                    setAddCategoryError('');
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Plus size={16} />
+                  <span>Save Category</span>
                 </button>
               </div>
             </form>
